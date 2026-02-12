@@ -78,6 +78,7 @@ void ABase_Bird::OnDragStart()
         
         // 드래그 중에는 물리를 끄고 수동 이동
         BirdMesh->SetSimulatePhysics(false);
+        BirdMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); // 충돌도 잠시 끔
 
         // 마우스를 뷰포트에 가두되 커서는 유지
         FInputModeGameAndUI InputMode;
@@ -117,26 +118,20 @@ void ABase_Bird::OnDragRelease()
 
 void ABase_Bird::LaunchByVector(FVector LaunchVelocity)
 {
-    if (!BirdMesh) return;
+    // ★ 쏘기 직전에 현재 조준된 각도를 다시 한번 고정
+    SetActorRotation(LaunchVelocity.Rotation());
 
-    AddActorWorldOffset(FVector(0, 0, 100.0f));
+    // 이제 물리를 켜고 발사!
+    BirdMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     BirdMesh->SetSimulatePhysics(true);
-    BirdMesh->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
-    BirdMesh->SetAllPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
 
-    // 공중 회전 잠금
+    // ★ 날아가는 동안 각도가 틀어지지 않게 회전 잠금 (선택 사항)
     BirdMesh->BodyInstance.bLockXRotation = true;
     BirdMesh->BodyInstance.bLockYRotation = true;
     BirdMesh->BodyInstance.bLockZRotation = true;
     BirdMesh->BodyInstance.UpdatePhysicsFilterData();
 
-    SetActorRotation(LaunchVelocity.Rotation());
     BirdMesh->SetAllPhysicsLinearVelocity(LaunchVelocity, false);
-
-    if (ProjectileMovement) {
-        ProjectileMovement->Velocity = LaunchVelocity;
-        ProjectileMovement->Activate(true);
-    }
     bHasLaunched = true;
 }
 
@@ -156,24 +151,26 @@ void ABase_Bird::Tick(float DeltaTime)
         APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
         FVector2D CurrentMouse;
         if (PC && PC->GetMousePosition(CurrentMouse.X, CurrentMouse.Y)) {
-            // 마우스 드래그 차이 계산
             FVector2D DragDelta = CurrentMouse - StartMousePos;
 
-            // [의도 반영: 거울 반사 로직]
-            // 1. 상하(Pitch): 마우스 위(Y-)로 당기면 새는 아래(Pitch-)를 봐야 함 -> DragDelta.Y 부호 그대로 사용
-            // 2. 좌우(Yaw): 마우스 오른쪽(X+)으로 당기면 새는 왼쪽(Yaw-)을 봐야 함 -> -DragDelta.X 사용
             float PitchAngle = FMath::Clamp((DragDelta.Y / MaxDragDist) * 30.0f, -30.0f, 30.0f);
             float YawAngle   = FMath::Clamp((-DragDelta.X / MaxDragDist) * 30.0f, -30.0f, 30.0f);
-
-            // X축(정면) 기준으로 회전값 적용
+            
+            // ★ 핵심 보정: 모델이 옆을 보고 있다면 Yaw에 90도를 더해 정면을 맞춥니다.
+            // 만약 반대쪽을 본다면 -90.0f로 바꿔보세요.
+            FRotator VisualRot = FRotator(PitchAngle, YawAngle + -90.0f, 0.f); 
+            
+            // 실제 발사 계산용(보정 없는 순수 방향)
             FRotator LaunchRot = FRotator(PitchAngle, YawAngle, 0.f);
-            SetActorRotation(LaunchRot);
 
-            // [장전 위치 연출]
-            // 새가 바라보는 방향(LaunchRot.Vector())의 정반대로 밀기 위해 -1.0 곱함
+            if (BirdMesh) {
+                // 보이는 메쉬는 보정된 각도로 돌리고
+                BirdMesh->SetWorldRotation(VisualRot);
+            }
+            
+            // 위치 이동은 원래 조준 방향(LaunchRot)의 반대로!
             float StrengthRatio = FMath::Clamp(DragDelta.Size() / MaxDragDist, 0.0f, 1.0f);
             FVector BackwardOffset = LaunchRot.Vector() * -1.0f * (StrengthRatio * MaxVisualDragDist);
-            
             SetActorLocation(InitialLocation + BackwardOffset);
 
             // 디버그로 수치 확인 (P가 마이너스면 아래, Y가 마이너스면 왼쪽 조준)
