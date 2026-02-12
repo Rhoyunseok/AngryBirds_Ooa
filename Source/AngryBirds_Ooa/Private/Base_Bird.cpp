@@ -4,6 +4,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "Framework/Application/NavigationConfig.h"
+#include "Engine/EngineTypes.h"
 
 ABase_Bird::ABase_Bird()
 {
@@ -66,11 +68,22 @@ void ABase_Bird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 void ABase_Bird::OnDragStart()
 {
     APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
+    // GetMousePosition이 드래그 도중에도 정확히 작동하도록 보장
     if (PC && PC->GetMousePosition(StartMousePos.X, StartMousePos.Y))
     {
+        if (StartMousePos.IsZero()) return;
+
         bIsDragging = true;
         InitialLocation = GetActorLocation();
+        
+        // 드래그 중에는 물리를 끄고 수동 이동
         BirdMesh->SetSimulatePhysics(false);
+
+        // 마우스를 뷰포트에 가두되 커서는 유지
+        FInputModeGameAndUI InputMode;
+        // 아래 두 줄은 기본값이므로 에러가 나면 과감히 지우셔도 됩니다.
+        // PC->SetInputMode만 제대로 호출되면 엔진 기본 설정이 적용됩니다.
+        PC->SetInputMode(InputMode);
     }
 }
 
@@ -81,23 +94,24 @@ void ABase_Bird::OnDragRelease()
 
     APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
     FVector2D CurrentMousePos;
-
     if (PC && PC->GetMousePosition(CurrentMousePos.X, CurrentMousePos.Y))
     {
         FVector2D DragDelta = CurrentMousePos - StartMousePos;
-        if (DragDelta.Size() < 20.0f) {
+        
+        if (DragDelta.Size() > 20.0f) {
+            // Tick과 동일한 부호 적용 (거울 반사)
+            float PitchAngle = FMath::Clamp((DragDelta.Y / MaxDragDist) * 30.0f, -30.0f, 30.0f);
+            float YawAngle   = FMath::Clamp((-DragDelta.X / MaxDragDist) * 30.0f, -30.0f, 30.0f);
+
+            FVector LaunchDir = FRotator(PitchAngle, YawAngle, 0.f).Vector();
+            float Power = FMath::Clamp(DragDelta.Size() / MaxDragDist, 0.0f, 1.0f) * 6000.0f;
+
+            LaunchByVector(LaunchDir * Power);
+        }
+        else {
             SetActorLocation(InitialLocation);
             BirdMesh->SetSimulatePhysics(true);
-            return;
         }
-
-        FVector LaunchDir;
-        LaunchDir.Y = FMath::Max(0.0f, DragDelta.Y); 
-        LaunchDir.X = DragDelta.X;        
-        LaunchDir.Z = DragDelta.Size() * 0.4f; 
-
-        float PowerRatio = FMath::Clamp(DragDelta.Size() / MaxDragDist, 0.0f, 1.0f);
-        LaunchByVector(LaunchDir.GetSafeNormal() * (PowerRatio * 6000.0f));
     }
 }
 
@@ -137,17 +151,34 @@ void ABase_Bird::Launch(float VerticalAngle, float HorizontalAngle, float Power)
 void ABase_Bird::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
     if (bIsDragging) {
         APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
         FVector2D CurrentMouse;
         if (PC && PC->GetMousePosition(CurrentMouse.X, CurrentMouse.Y)) {
-            FVector2D Delta = CurrentMouse - StartMousePos;
-            FVector NewLoc = InitialLocation;
-            float RatioX = FMath::Clamp(Delta.X / MaxDragDist, -1.0f, 1.0f);
-            float RatioY = FMath::Clamp(Delta.Y / MaxDragDist, -1.0f, 1.0f);
-            NewLoc.X -= RatioX * MaxVisualDragDist;
-            NewLoc.Y -= RatioY * MaxVisualDragDist;
-            SetActorLocation(NewLoc);
+            // 마우스 드래그 차이 계산
+            FVector2D DragDelta = CurrentMouse - StartMousePos;
+
+            // [의도 반영: 거울 반사 로직]
+            // 1. 상하(Pitch): 마우스 위(Y-)로 당기면 새는 아래(Pitch-)를 봐야 함 -> DragDelta.Y 부호 그대로 사용
+            // 2. 좌우(Yaw): 마우스 오른쪽(X+)으로 당기면 새는 왼쪽(Yaw-)을 봐야 함 -> -DragDelta.X 사용
+            float PitchAngle = FMath::Clamp((DragDelta.Y / MaxDragDist) * 30.0f, -30.0f, 30.0f);
+            float YawAngle   = FMath::Clamp((-DragDelta.X / MaxDragDist) * 30.0f, -30.0f, 30.0f);
+
+            // X축(정면) 기준으로 회전값 적용
+            FRotator LaunchRot = FRotator(PitchAngle, YawAngle, 0.f);
+            SetActorRotation(LaunchRot);
+
+            // [장전 위치 연출]
+            // 새가 바라보는 방향(LaunchRot.Vector())의 정반대로 밀기 위해 -1.0 곱함
+            float StrengthRatio = FMath::Clamp(DragDelta.Size() / MaxDragDist, 0.0f, 1.0f);
+            FVector BackwardOffset = LaunchRot.Vector() * -1.0f * (StrengthRatio * MaxVisualDragDist);
+            
+            SetActorLocation(InitialLocation + BackwardOffset);
+
+            // 디버그로 수치 확인 (P가 마이너스면 아래, Y가 마이너스면 왼쪽 조준)
+            GEngine->AddOnScreenDebugMessage(0, 0.0f, FColor::Cyan, 
+                FString::Printf(TEXT("Pitch(상하): %.1f | Yaw(좌우): %.1f"), PitchAngle, YawAngle));
         }
     }
 }
