@@ -7,45 +7,31 @@
 #include "Base_Bird.generated.h"
 
 UCLASS()
-class ANGRYBIRDS_OOA_API ABase_Bird : public AActor
+class ANGRYBIRDS_OOA_API ABase_Bird : public APawn
 {
 	GENERATED_BODY()
 	
-public:	
-	// Sets default values for this actor's properties
+public:
 	ABase_Bird();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-	
-	// --- 부품(컴포넌트) 선언 ---
-
-	// 물리 충돌을 담당하는 구체 (뿌리)
+	// 1. 컴포넌트 선언 (블루프린트에서 볼 수 있게 설정)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class USphereComponent* SphereComp;
+	class USkeletalMeshComponent* BirdMesh;
 
-	// 새의 외관 (에셋을 입힐 곳)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UStaticMeshComponent* MeshComp;
-
-	// 발사 후 날아가는 물리 로직 담당
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UProjectileMovementComponent* ProjectileMovement;
 
-	// 카메라를 매달 '셀카봉' (스프링암)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	// 2. 발사 함수 (블루프린트에서 호출 가능하게 설정)
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void Launch(float AngleDegrees, float Power);
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	class USpringArmComponent* SpringArm;
 
-	// 새를 따라다닐 카메라
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	class UCameraComponent* FollowCamera;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 	
-	// 나중에 새총에서 호출할 "발사!" 함수
-	void Launch(FVector LaunchDirection, float Speed);
-
+	// 메쉬의 기본 회전값을 블루프린트에서 수정할 수 있게 합니다.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	FRotator MeshDefaultRotation;
 };
