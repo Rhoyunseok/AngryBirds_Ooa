@@ -96,21 +96,29 @@ void ABase_Bird::BeginPlay()
 
 {
 
-Super::BeginPlay();
+	Super::BeginPlay();
 
-APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
+	APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
 
-if (PC) {
+	if (PC) 
+	{
 
-EnableInput(PC);
+		EnableInput(PC);
 
-PC->bShowMouseCursor = true;
+		PC->bShowMouseCursor = true;
 
-FInputModeGameAndUI InputMode;
+		FInputModeGameAndUI InputMode;
 
-PC->SetInputMode(InputMode);
+		PC->SetInputMode(InputMode);
 
-}
+	}
+	if (BirdMesh)
+	{
+		// 충돌 시 실행될 함수 연결
+		BirdMesh->OnComponentHit.AddDynamic(this, &ABase_Bird::OnBirdHit);
+		// 물리 충돌 알림 활성화
+		BirdMesh->SetNotifyRigidBodyCollision(true); 
+	}
 
 }
 
@@ -304,31 +312,75 @@ void ABase_Bird::Tick(float DeltaTime)
 		}
 
 	}
-	else if (bHasLaunched)
+	else if (bHasLaunched && !bHasHitSomething) 
 	{
-		// 현재 물리적 이동 속도
 		FVector CurrentVelocity = BirdMesh->GetPhysicsLinearVelocity();
-
-		// 어느 정도 속도가 있을 때만 방향을 바꿉니다.
 		if (CurrentVelocity.Size() > 100.0f) 
 		{
-			// 1. 이동 방향을 나타내는 각도 추출
 			FRotator TargetRot = CurrentVelocity.Rotation();
-
-			// 2. 사용자님 메쉬 축 보정 (X월드-Y메쉬 대응 버전)
-			// 포물선을 따라 내려갈 때 부리가 아래를 향하도록 -TargetRot.Pitch 적용
+			// 포물선 방향 정렬
 			FRotator VisualFollowRot = FRotator(0.0f, TargetRot.Yaw - 90.0f, -TargetRot.Pitch);
-
-			// 3. 물리 회전과 충돌하지 않도록 강제 세팅 (Interp 속도를 높임)
-			FRotator CurrentRot = BirdMesh->GetComponentRotation();
-			FRotator NewRot = FMath::RInterpTo(CurrentRot, VisualFollowRot, DeltaTime, 12.0f);
-
-			// TeleportFlag를 써서 물리 연산 중에도 위치/회전을 강제로 맞춥니다.
-			BirdMesh->SetWorldRotation(NewRot, false, nullptr, ETeleportType::TeleportPhysics);
+			BirdMesh->SetWorldRotation(VisualFollowRot, false, nullptr, ETeleportType::TeleportPhysics);
 		}
+	}
+	// [단계 2] 충돌 후: 데굴데굴 구르다 멈추기
+	else if (bIsSettling) 
+	{
+		/*float Speed = BirdMesh->GetPhysicsLinearVelocity().Size();
+
+		// 속도가 어느 정도 있을 때는 그냥 물리 엔진이 구르게 놔둠 (코드가 간섭 X)
+		if (Speed < 50.0f) 
+		{
+			// 멈추기 직전에만 배를 바닥으로 살짝 보정
+			FRotator CurrentRot = BirdMesh->GetComponentRotation();
+			FRotator TargetRot = FRotator(0.0f, CurrentRot.Yaw, 0.0f);
+			FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, 3.0f);
+			BirdMesh->SetWorldRotation(NewRot, false, nullptr, ETeleportType::TeleportPhysics);
+		}*/
 	}
 }
 
+void ABase_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (bHasHitSomething) return;
 
+	if (bHasLaunched)
+	{
+		bHasHitSomething = true;
+		bIsSettling = true;
 
+		if (ProjectileMovement) 
+		{
+			ProjectileMovement->StopMovementImmediately();
+			ProjectileMovement->Deactivate();
+		}
 
+		// [수정 1] 모든 물리 에너지를 박살냅니다. (튀어오를 재료를 없앰)
+		BirdMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+		BirdMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+
+		// [수정 2] 아래로 쏘지 마세요! 대신 현재 위치에서 바닥으로 살짝만 누릅니다.
+		// 속도가 아니라 '힘(Impulse)'으로 아주 살짝만 눌러주거나 아예 생략해도 됩니다.
+		// FVector NewVel = (GetActorForwardVector() * 100.0f); // 전진력만 아주 살짝
+		// BirdMesh->SetPhysicsLinearVelocity(NewVel);
+
+		// [수정 3] 즉시 회전 (이건 유지하되 너무 세면 줄이세요)
+		FVector WildSpin = FVector(FMath::RandRange(-10000, 10000), FMath::RandRange(-10000, 10000), FMath::RandRange(-10000, 10000));
+		BirdMesh->AddAngularImpulseInDegrees(WildSpin, NAME_None, true);
+
+		// [수정 4] 댐핑을 극단적으로 높여서 '껌' 상태로 만듭니다.
+		// 댐핑이 높아야 바닥에 닿았을 때 에너지가 즉시 소멸됩니다.
+		BirdMesh->SetLinearDamping(20.0f); // 5.0에서 20.0으로 대폭 상향
+		BirdMesh->SetAngularDamping(0.5f);
+
+		GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABase_Bird::DestroyBird, 3.0f, false);
+	}
+}
+
+void ABase_Bird::DestroyBird()
+{
+	// 여기서 이펙트를 생성하고 싶다면:
+	// UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DeathParticle, GetActorLocation());
+    
+	Destroy();
+}

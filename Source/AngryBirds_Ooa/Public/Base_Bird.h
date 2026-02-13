@@ -67,51 +67,54 @@ public:
     void LaunchByVector(FVector LaunchVelocity);
 
 
+    virtual void Tick(float DeltaTime) override;
 
+    void OnDragStart();
+
+    void OnDragRelease();
+    
+    FVector2D StartMousePos;
+
+    FVector InitialLocation;
+
+    bool bIsDragging = false;
+    bool bIsSettling = false; // 서서히 배를 바닥에 대고 멈추는 상태인가?
+    
+    int32 HitCount = 0;
+    const int32 MaxHitBeforeStop = 2; // 2번 충돌 후 멈춤
+    
+    int32 BounceCount = 0;
+    bool bIsRolling = false;
+    
 protected:
 
     virtual void BeginPlay() override;
 
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-
-
-public:
-
-    virtual void Tick(float DeltaTime) override;
-
-    void OnDragStart();
-
-    void OnDragRelease();
-
-
-
-protected:
-
     UPROPERTY(EditAnywhere, Category = "Launch")
 
     float MaxDragDist = 500.0f;
-
-
+    
 
     UPROPERTY(EditAnywhere, Category = "Drag")
 
     float MaxVisualDragDist = 100.0f;
 
-
-
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Status")
 
     bool bHasLaunched = false;
 
+    UFUNCTION()
+    void OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+    bool bHasHitSomething = false; // 충돌 여부 체크 변수
+    
+    void DestroyBird();
 
-private:
+    // 충돌 후 소멸까지 기다릴 시간 (초)
+    UPROPERTY(EditAnywhere, Category = "BirdSettings")
+    float DespawnDelay = 3.0f;
 
-    FVector2D StartMousePos;
-
-    FVector InitialLocation;
-
-    bool bIsDragging = false;
-
+    FTimerHandle DespawnTimerHandle;
 };
