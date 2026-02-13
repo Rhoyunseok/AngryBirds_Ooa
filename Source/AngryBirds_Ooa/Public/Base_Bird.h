@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 
 #include "GameFramework/Pawn.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Base_Bird.generated.h"
 
@@ -117,4 +118,12 @@ protected:
     float DespawnDelay = 3.0f;
 
     FTimerHandle DespawnTimerHandle;
+    
+    // 궤적을 그릴지 여부
+    bool bShowTrajectory = false;
+
+    // 궤적 계산 및 그리기 함수
+    void DisplayTrajectory();
+
+    // MaxDragDist 등 기존 변수들 위치 확인
 };
