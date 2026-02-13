@@ -105,7 +105,7 @@ void ABase_Bird::OnDragRelease()
             float YawAngle   = FMath::Clamp((-DragDelta.X / MaxDragDist) * 30.0f, -30.0f, 30.0f);
 
             FVector LaunchDir = FRotator(PitchAngle, YawAngle, 0.f).Vector();
-            float Power = FMath::Clamp(DragDelta.Size() / MaxDragDist, 0.0f, 1.0f) * 6000.0f;
+            float Power = FMath::Clamp(DragDelta.Size() / MaxDragDist, 0.0f, 1.0f) * 2000.0f;
 
             LaunchByVector(LaunchDir * Power);
         }
