@@ -1,420 +1,309 @@
 #include "Base_Bird.h"
-
 #include "GameFramework/ProjectileMovementComponent.h"
-
 #include "Components/SkeletalMeshComponent.h"
-
 #include "GameFramework/SpringArmComponent.h"
-
 #include "Camera/CameraComponent.h"
-
 #include "GameFramework/PlayerController.h"
-
 #include "Framework/Application/NavigationConfig.h"
-
 #include "Engine/EngineTypes.h"
 
-
-
+// =============================================================
+// 생성자: 컴포넌트 구성 및 기본 초기화
+// =============================================================
 ABase_Bird::ABase_Bird()
-
 {
+    PrimaryActorTick.bCanEverTick = true;
 
-PrimaryActorTick.bCanEverTick = true;
+    // 1. Root 설정: 액터의 기준점
+    RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
+    RootComponent = RootScene;
 
+    // 2. 메쉬 설정: 물리 시뮬레이션 활성화
+    BirdMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BirdMesh"));
+    BirdMesh->SetupAttachment(RootScene);
+    BirdMesh->SetSimulatePhysics(true);
+    BirdMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
 
+    // 3. 스프링 암 설정: 카메라가 새를 따라다니되, 새의 회전값은 무시(고정 시야)
+    SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+    SpringArm->SetupAttachment(BirdMesh); 
+    SpringArm->TargetArmLength = 800.0f;
+    SpringArm->bInheritPitch = false; // 새의 Pitch 회전 무시
+    SpringArm->bInheritYaw = false;   // 새의 Yaw 회전 무시
+    SpringArm->bInheritRoll = false;  // 새의 Roll 회전 무시
 
-// 1. Root 설정
+    // 카메라 래그: 카메라 이동을 부드럽게 지연시킴
+    SpringArm->bEnableCameraLag = true;
+    SpringArm->CameraLagSpeed = 3.0f;
 
-RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
+    // 4. 카메라 설정
+    FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+    FollowCamera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 
-RootComponent = RootScene;
-
-
-
-// 2. 메쉬 설정
-
-BirdMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BirdMesh"));
-
-BirdMesh->SetupAttachment(RootScene);
-
-BirdMesh->SetSimulatePhysics(true);
-
-BirdMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
-
-
-
-// 3. 스프링 암 설정 (카메라 추적의 핵심)
-
-SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-
-SpringArm->SetupAttachment(BirdMesh); // 메쉬를 따라다니도록 부착
-
-SpringArm->TargetArmLength = 800.0f;
-
-// ★ 핵심 수정: 새가 회전해도 카메라는 돌지 않도록 설정
-
-SpringArm->bInheritPitch = false;
-
-SpringArm->bInheritYaw = false;
-
-SpringArm->bInheritRoll = false;
-
-
-
-// ★ 카메라 래그: 카메라가 새를 더 부드럽게 쫓아오게 함
-
-SpringArm->bEnableCameraLag = true;
-
-SpringArm->CameraLagSpeed = 3.0f; // 낮을수록 더 부드럽게 따라옴
-
-
-
-// 4. 카메라 설정
-
-FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-
-FollowCamera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
-
-
-
-// 5. 무브먼트 설정
-
-ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-
-ProjectileMovement->UpdatedComponent = BirdMesh;
-
-ProjectileMovement->bAutoActivate = false;
-
-ProjectileMovement->MaxSpeed = 10000.f;
-
+    // 5. 무브먼트 설정: 발사체 로직을 위한 컴포넌트 (주로 속도 제한용)
+    ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
+    ProjectileMovement->UpdatedComponent = BirdMesh;
+    ProjectileMovement->bAutoActivate = false;
+    ProjectileMovement->MaxSpeed = 10000.f;
 }
 
-
-
+// =============================================================
+// 게임 시작 및 입력 바인딩
+// =============================================================
 void ABase_Bird::BeginPlay()
-
 {
+    Super::BeginPlay();
 
-	Super::BeginPlay();
+    APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
+    if (PC)
+    {
+       EnableInput(PC);
+       PC->bShowMouseCursor = true;
+       FInputModeGameAndUI InputMode;
+       PC->SetInputMode(InputMode);
+    }
 
-	APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
-
-	if (PC) 
-	{
-
-		EnableInput(PC);
-
-		PC->bShowMouseCursor = true;
-
-		FInputModeGameAndUI InputMode;
-
-		PC->SetInputMode(InputMode);
-
-	}
-	if (BirdMesh)
-	{
-		// 충돌 시 실행될 함수 연결
-		BirdMesh->OnComponentHit.AddDynamic(this, &ABase_Bird::OnBirdHit);
-		// 물리 충돌 알림 활성화
-		BirdMesh->SetNotifyRigidBodyCollision(true); 
-	}
-
+    if (BirdMesh)
+    {
+       // 물리 충돌 이벤트 연결 및 알림 활성화
+       BirdMesh->OnComponentHit.AddDynamic(this, &ABase_Bird::OnBirdHit);
+       BirdMesh->SetNotifyRigidBodyCollision(true);
+    }
 }
-
-
 
 void ABase_Bird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-
 {
-
-Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-PlayerInputComponent->BindAction("DragShoot", IE_Pressed, this, &ABase_Bird::OnDragStart);
-
-PlayerInputComponent->BindAction("DragShoot", IE_Released, this, &ABase_Bird::OnDragRelease);
-
+    Super::SetupPlayerInputComponent(PlayerInputComponent);
+    // 드래그 액션 바인딩 (누를 때 시작, 뗄 때 발사)
+    PlayerInputComponent->BindAction("DragShoot", IE_Pressed, this, &ABase_Bird::OnDragStart);
+    PlayerInputComponent->BindAction("DragShoot", IE_Released, this, &ABase_Bird::OnDragRelease);
 }
 
-
-
+// =============================================================
+// 드래그 및 발사 로직
+// =============================================================
 void ABase_Bird::OnDragStart()
-
 {
+    APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
+    if (PC && PC->GetMousePosition(StartMousePos.X, StartMousePos.Y))
+    {
+       if (StartMousePos.IsZero()) return;
 
-APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
+       bIsDragging = true;
+       InitialLocation = GetActorLocation(); // 조준 시작 위치 저장
 
-// GetMousePosition이 드래그 도중에도 정확히 작동하도록 보장
+       // 드래그 중 물리 일시 정지 및 충돌 비활성화 (마우스 조작 우선)
+       BirdMesh->SetSimulatePhysics(false);
+       BirdMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-if (PC && PC->GetMousePosition(StartMousePos.X, StartMousePos.Y))
-
-{
-
-if (StartMousePos.IsZero()) return;
-
-
-
-bIsDragging = true;
-
-InitialLocation = GetActorLocation();
-
-// 드래그 중에는 물리를 끄고 수동 이동
-
-BirdMesh->SetSimulatePhysics(false);
-
-BirdMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); // 충돌도 잠시 끔
-
-
-
-// 마우스를 뷰포트에 가두되 커서는 유지
-
-FInputModeGameAndUI InputMode;
-
-// 아래 두 줄은 기본값이므로 에러가 나면 과감히 지우셔도 됩니다.
-
-// PC->SetInputMode만 제대로 호출되면 엔진 기본 설정이 적용됩니다.
-
-PC->SetInputMode(InputMode);
-
+       FInputModeGameAndUI InputMode;
+       PC->SetInputMode(InputMode);
+    }
 }
-
-}
-
-
 
 void ABase_Bird::OnDragRelease()
 {
-	if (!bIsDragging) return;
-	bIsDragging = false;
+    if (!bIsDragging) return;
+    bIsDragging = false;
 
-	APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
-	FVector2D CurrentMousePos;
-    
-	if (PC && PC->GetMousePosition(CurrentMousePos.X, CurrentMousePos.Y))
-	{
-		FVector2D DragDelta = CurrentMousePos - StartMousePos;
-        
-		if (DragDelta.Size() > 20.0f) {
-			// 1. 기본 조준 방향 (Yaw)
-			float YawAngle = FMath::Clamp((-DragDelta.X / MaxDragDist) * 45.0f, -45.0f, 45.0f);
+    APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
+    FVector2D CurrentMousePos;
 
-			// 2. 고도(Pitch) 로직 강화: (상하 절대값 - 좌우 절대값) 기반
-			// 상하 드래그가 지배적일수록 고도가 급격히 상승합니다.
-			float VerticalBias = (FMath::Abs(DragDelta.Y) - FMath::Abs(DragDelta.X)) / MaxDragDist;
-            
-			// 0에서 90도까지 매핑 (VerticalBias가 1에 가까울수록 90도에 수렴)
-			// 지면 아래로 쏘는 것을 방지하기 위해 0~90도 사이로 Clamp
-			float PitchAngle = FMath::Clamp(VerticalBias * 90.0f, 0.0f, 90.0f);
+    if (PC && PC->GetMousePosition(CurrentMousePos.X, CurrentMousePos.Y))
+    {
+       FVector2D DragDelta = CurrentMousePos - StartMousePos;
 
-			// 3. 발사 벡터 생성
-			// Rotation 순서상 Pitch가 90도면 하늘 정면을 향합니다.
-			FVector LaunchDir = FRotator(PitchAngle, YawAngle, 0.f).Vector();
-            
-			// 힘(Power)은 전체 드래그 길이에 비례
-			float Power = FMath::Clamp(DragDelta.Size() / MaxDragDist, 0.0f, 1.0f) * 2500.0f;
+       // 최소 드래그 거리(20) 체크
+       if (DragDelta.Size() > 20.0f)
+       {
+          // 1. Yaw(좌우): X축 드래그 비례 (-45~45도)
+          float YawAngle = FMath::Clamp((-DragDelta.X / MaxDragDist) * 45.0f, -45.0f, 45.0f);
 
-			LaunchByVector(LaunchDir * Power);
-		}
-		else {
-			SetActorLocation(InitialLocation);
-			BirdMesh->SetSimulatePhysics(true);
-		}
-	}
+          // 2. Pitch(상하): 상하/좌우 드래그 차이를 이용한 고도 계산 (0~90도)
+          float VerticalBias = (FMath::Abs(DragDelta.Y) - FMath::Abs(DragDelta.X)) / MaxDragDist;
+          float PitchAngle = FMath::Clamp(VerticalBias * 90.0f, 0.0f, 90.0f);
+
+          // 3. 발사 방향 벡터 생성
+          FVector LaunchDir = FRotator(PitchAngle, YawAngle, 0.f).Vector();
+
+          // 4. 발사 파워 계산: 드래그 길이에 비례 (최대 2500)
+          float Power = FMath::Clamp(DragDelta.Size() / MaxDragDist, 0.0f, 1.0f) * 2500.0f;
+
+          LaunchByVector(LaunchDir * Power);
+       }
+       else
+       {
+          // 드래그가 짧으면 원래 위치로 복구 및 물리 재활성화
+          SetActorLocation(InitialLocation);
+          BirdMesh->SetSimulatePhysics(true);
+       }
+    }
 }
-
 
 void ABase_Bird::LaunchByVector(FVector LaunchVelocity)
 {
-	if (!BirdMesh) return;
+    if (!BirdMesh) return;
 
-	// 발사 방향으로 초기 각도 설정
-	SetActorRotation(LaunchVelocity.Rotation());
+    // 발사 방향으로 즉시 회전 후 물리 및 충돌 복구
+    SetActorRotation(LaunchVelocity.Rotation());
+    BirdMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    BirdMesh->SetSimulatePhysics(true);
 
-	BirdMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	BirdMesh->SetSimulatePhysics(true);
+    // 물리 회전 잠금 해제: 비행 중 자유로운 회전 허용
+    BirdMesh->BodyInstance.bLockXRotation = false;
+    BirdMesh->BodyInstance.bLockYRotation = false;
+    BirdMesh->BodyInstance.bLockZRotation = false;
+    BirdMesh->BodyInstance.UpdatePhysicsFilterData();
 
-	// ★ 핵심: 잠금을 모두 false로 풀어야 포물선 방향으로 고개가 돌아갑니다.
-	BirdMesh->BodyInstance.bLockXRotation = false;
-	BirdMesh->BodyInstance.bLockYRotation = false;
-	BirdMesh->BodyInstance.bLockZRotation = false;
-	BirdMesh->BodyInstance.UpdatePhysicsFilterData();
-
-	// 중력 배율을 살짝 높여주면 포물선이 더 예쁘게 나옵니다 (선택 사항)
-	// BirdMesh->SetApplyGravity(true);
-
-	BirdMesh->SetAllPhysicsLinearVelocity(LaunchVelocity, false);
-	bHasLaunched = true;
+    // 초기 속도 적용 및 발사 상태 플래그 활성화
+    BirdMesh->SetAllPhysicsLinearVelocity(LaunchVelocity, false);
+    bHasLaunched = true;
 }
-
-
 
 void ABase_Bird::Launch(float VerticalAngle, float HorizontalAngle, float Power)
-
 {
-
-float VRad = FMath::DegreesToRadians(VerticalAngle);
-
-float HRad = FMath::DegreesToRadians(HorizontalAngle);
-
-FVector Dir(FMath::Cos(VRad) * FMath::Sin(HRad), FMath::Cos(VRad) * FMath::Cos(HRad), FMath::Sin(VRad));
-
-LaunchByVector(Dir.GetSafeNormal() * Power);
-
+    // 수동 발사를 위한 보조 함수 (각도 기반)
+    float VRad = FMath::DegreesToRadians(VerticalAngle);
+    float HRad = FMath::DegreesToRadians(HorizontalAngle);
+    FVector Dir(FMath::Cos(VRad) * FMath::Sin(HRad), FMath::Cos(VRad) * FMath::Cos(HRad), FMath::Sin(VRad));
+    LaunchByVector(Dir.GetSafeNormal() * Power);
 }
 
-
-
+// =============================================================
+// 틱 업데이트: 조준 비주얼 및 비행 중 회전 제어
+// =============================================================
 void ABase_Bird::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
-	if (bIsDragging) {
-		APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
-		FVector2D CurrentMouse;
-		if (PC && PC->GetMousePosition(CurrentMouse.X, CurrentMouse.Y)) {
-			FVector2D DragDelta = CurrentMouse - StartMousePos;
+    // [상태 1] 드래그 조준 중
+    if (bIsDragging)
+    {
+       APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
+       FVector2D CurrentMouse;
+       if (PC && PC->GetMousePosition(CurrentMouse.X, CurrentMouse.Y))
+       {
+          FVector2D DragDelta = CurrentMouse - StartMousePos;
 
-			// 1. 각도 계산
-			float PitchAngle = FMath::Clamp((DragDelta.Y / MaxDragDist) * 30.0f, -30.0f, 30.0f);
-			float YawAngle = FMath::Clamp((-DragDelta.X / MaxDragDist) * 30.0f, -30.0f, 30.0f);
-            
-			// 2. 사용자 요청 고도 보정 (상하 - 좌우 차이)
-			float HeightBias = (FMath::Abs(DragDelta.Y) - FMath::Abs(DragDelta.X)) / MaxDragDist;
-			float FinalPitch = FMath::Clamp(PitchAngle + (HeightBias * 45.0f), -20.0f, 90.0f);
+          // 1. 조준 각도 계산
+          float PitchAngle = FMath::Clamp((DragDelta.Y / MaxDragDist) * 30.0f, -30.0f, 30.0f);
+          float YawAngle = FMath::Clamp((-DragDelta.X / MaxDragDist) * 30.0f, -30.0f, 30.0f);
+          float HeightBias = (FMath::Abs(DragDelta.Y) - FMath::Abs(DragDelta.X)) / MaxDragDist;
+          float FinalPitch = FMath::Clamp(PitchAngle + (HeightBias * 45.0f), -20.0f, 90.0f);
 
-			// ★ 3. 비주얼 회전 보정 (축 교정 핵심) ★
-			// 월드 X에 메쉬 Y가 대응되는 경우:
-			// 계산된 FinalPitch(상하)를 Roll(세번째 인자)에 넣고, 
-			// 원래 옆을 보고 있으므로 Yaw를 -90도(또는 +90도) 틀어 정면을 맞춥니다.
-            
-			// 만약 고개가 반대로 꺾인다면 -FinalPitch로 바꿔보세요.
-			FRotator VisualRot = FRotator(0.0f, YawAngle - 90.0f, -FinalPitch); 
+          // 2. 비주얼 회전 보정 (메쉬 축 방향에 따른 수치 조정)
+          FRotator VisualRot = FRotator(0.0f, YawAngle - 90.0f, -FinalPitch);
+          if (BirdMesh) BirdMesh->SetWorldRotation(VisualRot);
 
-			if (BirdMesh) {
-				BirdMesh->SetWorldRotation(VisualRot);
-			}
+          // 3. 시각적 위치 이동: 발사 방향 반대쪽으로 당겨지는 연출
+          float StrengthRatio = FMath::Clamp(DragDelta.Size() / MaxDragDist, 0.0f, 1.0f);
+          FVector LaunchDir = FRotator(FinalPitch, YawAngle, 0.0f).Vector();
+          FVector BackwardOffset = LaunchDir * -1.0f * (StrengthRatio * MaxVisualDragDist);
+          SetActorLocation(InitialLocation + BackwardOffset);
+          
+          // 4. 예상 궤적 표시
+          DisplayTrajectory();
 
-			// 4. 위치 이동 (당겨지는 효과)
-			float StrengthRatio = FMath::Clamp(DragDelta.Size() / MaxDragDist, 0.0f, 1.0f);
-			// 실제 발사될 방향 벡터
-			FVector LaunchDir = FRotator(FinalPitch, YawAngle, 0.0f).Vector();
-			FVector BackwardOffset = LaunchDir * -1.0f * (StrengthRatio * MaxVisualDragDist);
-			SetActorLocation(InitialLocation + BackwardOffset);
-			DisplayTrajectory();
-
-
-			// 디버그로 수치 확인 (P가 마이너스면 아래, Y가 마이너스면 왼쪽 조준)
-
-			GEngine->AddOnScreenDebugMessage(0, 0.0f, FColor::Cyan,
-
-		FString::Printf(TEXT("Pitch(상하): %.1f | Yaw(좌우): %.1f"), PitchAngle, YawAngle));
-
-		}
-
-	}
-	else if (bHasLaunched && !bHasHitSomething) 
-	{
-		FVector CurrentVelocity = BirdMesh->GetPhysicsLinearVelocity();
-		if (CurrentVelocity.Size() > 100.0f) 
-		{
-			FRotator TargetRot = CurrentVelocity.Rotation();
-			// 포물선 방향 정렬
-			FRotator VisualFollowRot = FRotator(0.0f, TargetRot.Yaw - 90.0f, -TargetRot.Pitch);
-			BirdMesh->SetWorldRotation(VisualFollowRot, false, nullptr, ETeleportType::TeleportPhysics);
-		}
-	}
-	// [단계 2] 충돌 후: 데굴데굴 구르다 멈추기
-	else if (bIsSettling) 
-	{
-		/*float Speed = BirdMesh->GetPhysicsLinearVelocity().Size();
-
-		// 속도가 어느 정도 있을 때는 그냥 물리 엔진이 구르게 놔둠 (코드가 간섭 X)
-		if (Speed < 50.0f) 
-		{
-			// 멈추기 직전에만 배를 바닥으로 살짝 보정
-			FRotator CurrentRot = BirdMesh->GetComponentRotation();
-			FRotator TargetRot = FRotator(0.0f, CurrentRot.Yaw, 0.0f);
-			FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, 3.0f);
-			BirdMesh->SetWorldRotation(NewRot, false, nullptr, ETeleportType::TeleportPhysics);
-		}*/
-	}
+          // 디버그 메시지 출력
+          GEngine->AddOnScreenDebugMessage(0, 0.0f, FColor::Cyan,
+             FString::Printf(TEXT("Pitch(상하): %.1f | Yaw(좌우): %.1f"), PitchAngle, YawAngle));
+       }
+    }
+    // [상태 2] 발사 후 비행 중
+    else if (bHasLaunched && !bHasHitSomething)
+    {
+       FVector CurrentVelocity = BirdMesh->GetPhysicsLinearVelocity();
+       if (CurrentVelocity.Size() > 100.0f)
+       {
+          // 비행 속도 방향에 맞춰 메쉬의 고개가 향하도록 업데이트 (포물선 연출)
+          FRotator TargetRot = CurrentVelocity.Rotation();
+          FRotator VisualFollowRot = FRotator(0.0f, TargetRot.Yaw - 90.0f, -TargetRot.Pitch);
+          BirdMesh->SetWorldRotation(VisualFollowRot, false, nullptr, ETeleportType::TeleportPhysics);
+       }
+    }
+    // [상태 3] 충돌 후 정지 과정 
+    else if (bIsSettling)
+    {
+       /* 로직 생략 */
+    }
 }
 
-void ABase_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+// =============================================================
+// 충돌 처리 및 소멸
+// =============================================================
+void ABase_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+                           FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (bHasHitSomething) return;
+    if (bHasHitSomething) return;
 
-	if (bHasLaunched)
-	{
-		bHasHitSomething = true;
-		bIsSettling = true;
+    if (bHasLaunched)
+    {
+       bHasHitSomething = true;
+       bIsSettling = true;
 
-		if (ProjectileMovement) 
-		{
-			ProjectileMovement->StopMovementImmediately();
-			ProjectileMovement->Deactivate();
-		}
+       // 무브먼트 컴포넌트 즉시 중지
+       if (ProjectileMovement)
+       {
+          ProjectileMovement->StopMovementImmediately();
+          ProjectileMovement->Deactivate();
+       }
 
-		// [수정 1] 모든 물리 에너지를 박살냅니다. (튀어오를 재료를 없앰)
-		BirdMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
-		BirdMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+       // 1. 물리 속도 초기화 (반발력 제거)
+       BirdMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+       BirdMesh->SetPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
 
-		// [수정 2] 아래로 쏘지 마세요! 대신 현재 위치에서 바닥으로 살짝만 누릅니다.
-		// 속도가 아니라 '힘(Impulse)'으로 아주 살짝만 눌러주거나 아예 생략해도 됩니다.
-		// FVector NewVel = (GetActorForwardVector() * 100.0f); // 전진력만 아주 살짝
-		// BirdMesh->SetPhysicsLinearVelocity(NewVel);
+       // 2. 무작위 회전 임펄스 (바닥에서 구르는 연출)
+       FVector WildSpin = FVector(FMath::RandRange(-10000, 10000), FMath::RandRange(-10000, 10000),
+                                  FMath::RandRange(-10000, 10000));
+       BirdMesh->AddAngularImpulseInDegrees(WildSpin, NAME_None, true);
 
-		// [수정 3] 즉시 회전 (이건 유지하되 너무 세면 줄이세요)
-		FVector WildSpin = FVector(FMath::RandRange(-10000, 10000), FMath::RandRange(-10000, 10000), FMath::RandRange(-10000, 10000));
-		BirdMesh->AddAngularImpulseInDegrees(WildSpin, NAME_None, true);
+       // 3. 댐핑(마찰 저항)을 높여 빠르게 정지하도록 설정
+       BirdMesh->SetLinearDamping(20.0f); 
+       BirdMesh->SetAngularDamping(0.5f);
 
-		// [수정 4] 댐핑을 극단적으로 높여서 '껌' 상태로 만듭니다.
-		// 댐핑이 높아야 바닥에 닿았을 때 에너지가 즉시 소멸됩니다.
-		BirdMesh->SetLinearDamping(20.0f); // 5.0에서 20.0으로 대폭 상향
-		BirdMesh->SetAngularDamping(0.5f);
-
-		GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABase_Bird::DestroyBird, 3.0f, false);
-	}
+       // 4. 3초 후 소멸 타이머 시작
+       GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABase_Bird::DestroyBird, 3.0f, false);
+    }
 }
 
 void ABase_Bird::DestroyBird()
 {
-	// 여기서 이펙트를 생성하고 싶다면:
-	// UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DeathParticle, GetActorLocation());
-    
-	Destroy();
+    Destroy();
 }
 
+// =============================================================
+// 궤적 예측 시각화
+// =============================================================
 void ABase_Bird::DisplayTrajectory()
 {
-	if (!bIsDragging) return;
+    if (!bIsDragging) return;
 
-	APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
-	FVector2D CurrentMouse;
-	if (PC && PC->GetMousePosition(CurrentMouse.X, CurrentMouse.Y))
-	{
-		// ... (발사 속도 계산 로직은 기존과 동일) ...
-		FVector2D DragDelta = CurrentMouse - StartMousePos;
-		float PitchAngle = FMath::Clamp(((FMath::Abs(DragDelta.Y) - FMath::Abs(DragDelta.X)) / MaxDragDist) * 90.0f, 0.0f, 90.0f);
-		float YawAngle = FMath::Clamp((-DragDelta.X / MaxDragDist) * 45.0f, -45.0f, 45.0f);
-        
-		FVector LaunchDir = FRotator(PitchAngle, YawAngle, 0.f).Vector();
-		float Power = FMath::Clamp(DragDelta.Size() / MaxDragDist, 0.0f, 1.0f) * 2500.0f;
-		FVector LaunchVelocity = LaunchDir * Power;
+    APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
+    FVector2D CurrentMouse;
+    if (PC && PC->GetMousePosition(CurrentMouse.X, CurrentMouse.Y))
+    {
+       FVector2D DragDelta = CurrentMouse - StartMousePos;
+       
+       // 실제 발사 시와 동일한 각도 및 파워 계산
+       float PitchAngle = FMath::Clamp(((FMath::Abs(DragDelta.Y) - FMath::Abs(DragDelta.X)) / MaxDragDist) * 90.0f, 0.0f, 90.0f);
+       float YawAngle = FMath::Clamp((-DragDelta.X / MaxDragDist) * 45.0f, -45.0f, 45.0f);
 
-		// ★ [핵심 수정] 시작 위치를 새의 앞쪽으로 밀어주기
-		// 새의 중심점에서 발사 방향(LaunchDir)으로 약 50~100 유닛 정도 앞에 생성
-		float ForwardOffset = 200.0f; 
-		FVector StartPos = GetActorLocation() + (LaunchDir * ForwardOffset);
+       FVector LaunchDir = FRotator(PitchAngle, YawAngle, 0.f).Vector();
+       float Power = FMath::Clamp(DragDelta.Size() / MaxDragDist, 0.0f, 1.0f) * 2500.0f;
+       FVector LaunchVelocity = LaunchDir * Power;
 
-		// 예측 파라미터 설정 (StartPos 사용)
-		FPredictProjectilePathParams PathParams(10.0f, StartPos, LaunchVelocity, 2.0f);
-		PathParams.bTraceWithChannel = true;
-		PathParams.TraceChannel = ECollisionChannel::ECC_WorldStatic;
-		PathParams.DrawDebugType = EDrawDebugTrace::ForOneFrame; // 드래그 멈추면 자동으로 사라짐
-		PathParams.DrawDebugTime = 0.0f;
-        
-		FPredictProjectilePathResult PathResult;
-		UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
-	}
+       // 궤적 시작 위치 보정 (새의 전방 200유닛 지점)
+       float ForwardOffset = 200.0f;
+       FVector StartPos = GetActorLocation() + (LaunchDir * ForwardOffset);
+
+       // PredictProjectilePath: 물리 기반 궤적을 예측하여 디버그 라인으로 출력
+       FPredictProjectilePathParams PathParams(10.0f, StartPos, LaunchVelocity, 2.0f);
+       PathParams.bTraceWithChannel = true;
+       PathParams.TraceChannel = ECollisionChannel::ECC_WorldStatic;
+       PathParams.DrawDebugType = EDrawDebugTrace::ForOneFrame; // 매 프레임 갱신
+       PathParams.DrawDebugTime = 0.0f;
+
+       FPredictProjectilePathResult PathResult;
+       UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
+    }
 }
