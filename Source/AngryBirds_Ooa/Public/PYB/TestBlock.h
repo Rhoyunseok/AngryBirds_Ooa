@@ -6,6 +6,19 @@
 #include "GameFramework/Actor.h"
 #include "TestBlock.generated.h"
 
+USTRUCT()
+struct FCornerHitData
+{
+	GENERATED_BODY()
+	
+	int HitCount = 0;
+	UPROPERTY()
+	TArray<int> HitIndices;
+	float MaxPenetration = 0.0f;
+	FVector SurfaceNormal = FVector::UpVector;
+	FVector AverageImpactPoint = FVector::ZeroVector;
+};
+
 UCLASS()
 class ANGRYBIRDS_OOA_API ATestBlock : public AActor
 {
@@ -31,7 +44,8 @@ public:
 	class UStaticMeshComponent* BodyMeshComp;
 	
 	// 컴포넌트 관련 변수 선언
-	float BoxZ;
+	FVector BoxE;
+	FVector LocalCorners[8];
 	
 	// 물리 변수 선언
 	//UPROPERTY(EditAnywhere, Category="Physics") float InAngle;
@@ -47,7 +61,7 @@ public:
 	
 	// 운동 관련 변수 선언
 	UPROPERTY(EditAnywhere, Category="Movement") FVector CurVelocity;
-	UPROPERTY(EditAnywhere, Category="Movement") FHitResult GroundHitResult;
+	UPROPERTY(EditAnywhere, Category="Movement") FCornerHitData GroundHitResult;
 	
 	
 	// 실제 작용하는 힘 선언
@@ -68,6 +82,6 @@ public:
 	void UpdateActorLocation();
 	
 	// 상태 관련 함수
-	FHitResult CheckGround();
+	FCornerHitData CheckGround();
 	// bool CheckMoving();
 };

@@ -34,8 +34,8 @@ void ATestBlock::BeginPlay()
 	InitConstant();
 	
 	
-	CurVelocity = FVector(1000, 1000, 0);
-	bIsMoving = true;
+	// CurVelocity = FVector(50, 50, 0);
+	// bIsMoving = true;
 }
 
 // Called every frame
@@ -49,13 +49,13 @@ void ATestBlock::Tick(float DeltaTime)
 	if (!bIsGround)
 	{
 		GroundHitResult = CheckGround();
-		if (!GroundHitResult.bBlockingHit)
-		{
-			AddGravity(DeltaTime);
-		} else
-		{
-			SetActorGround();
-		}
+		// if (!GroundHitResult.bBlockingHit)
+		// {
+		// 	AddGravity(DeltaTime);
+		// } else
+		// {
+		// 	SetActorGround();
+		// }
 	}
 	if (bIsMoving && bIsGround)
 	{
@@ -85,7 +85,15 @@ void ATestBlock::InitConstant()
 	Gravity = -9.8f;
 	CurVelocity = FVector::ZeroVector;
 	
-	BoxZ = CollisionComp->Bounds.BoxExtent.Z;
+	BoxE = CollisionComp->Bounds.BoxExtent;
+	LocalCorners[0] = FVector( BoxE.X,  BoxE.Y,  BoxE.Z);
+	LocalCorners[1] = FVector( BoxE.X, -BoxE.Y,  BoxE.Z);
+	LocalCorners[2] = FVector(-BoxE.X,  BoxE.Y,  BoxE.Z);
+	LocalCorners[3] = FVector(-BoxE.X, -BoxE.Y,  BoxE.Z);
+	LocalCorners[4] = FVector( BoxE.X,  BoxE.Y, -BoxE.Z);
+	LocalCorners[5] = FVector( BoxE.X, -BoxE.Y, -BoxE.Z);
+	LocalCorners[6] = FVector(-BoxE.X,  BoxE.Y, -BoxE.Z);
+	LocalCorners[7] = FVector(-BoxE.X, -BoxE.Y, -BoxE.Z);
 	
 	bIsGround = false;
 	bIsMoving = false;
@@ -115,16 +123,53 @@ void ATestBlock::AddGravity(float DeltaSeconds)
 // 	}
 // }
 
-FHitResult ATestBlock::CheckGround()
+FCornerHitData ATestBlock::CheckGround()
 {
-	FHitResult hitInfo;
+	//FHitResult hitInfo;
 	FCollisionQueryParams params;
-	FVector startPos = CollisionComp->GetComponentLocation();
-	FVector endPos = startPos - BoxZ - 5.f;
+	//FVector startPos = CollisionComp->GetComponentLocation();
+	//FVector endPos = startPos - 5.f;
+	
+	FVector BoxLoc = GetActorLocation();
+	FQuat BoxQuat = GetActorQuat();
 	
 	params.AddIgnoredActor(this);
-	GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, params);
-	return hitInfo;
+	//GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, params);
+	FCornerHitData GroundResult;
+	
+	for (int i = 0; i < 8; i++)
+	{
+		FVector WorldCorner = BoxLoc + BoxQuat.RotateVector(LocalCorners[i]);
+		FVector Start = WorldCorner + FVector(0, 0, 2.f);
+		FVector End = WorldCorner - FVector(0, 0, 5.f);
+	
+		FHitResult hitInfo;
+		if (GetWorld()->LineTraceSingleByChannel(hitInfo, Start, End, ECC_Visibility, params))
+		{
+			FVector PenetrationVec = WorldCorner - hitInfo.ImpactPoint;
+			float DistanceAlongNormal = FVector::DotProduct(PenetrationVec, hitInfo.ImpactNormal);
+			
+			if (DistanceAlongNormal < 0.f)
+			{
+				GroundResult.HitCount++;
+				GroundResult.HitIndices.Add(i);
+				GroundResult.AverageImpactPoint += hitInfo.ImpactPoint;
+				float PenetrationDepth = FMath::Abs(DistanceAlongNormal);
+				if (PenetrationDepth > GroundResult.MaxPenetration)
+				{
+					GroundResult.MaxPenetration = PenetrationDepth;
+					GroundResult.SurfaceNormal = hitInfo.ImpactNormal;
+				}
+			}
+		}
+	}
+	
+	if (GroundResult.HitCount > 0)
+	{
+		GroundResult.AverageImpactPoint /= GroundResult.HitCount;
+	}
+	
+	return GroundResult;
 }
 
 // bool ATestBlock::CheckMoving()
@@ -140,7 +185,7 @@ FHitResult ATestBlock::CheckGround()
 void ATestBlock::SetActorGround()
 {
 	CurVelocity.Z = 0;
-	FVector NewLocation = FVector(GetActorLocation().X, GetActorLocation().Y, GroundHitResult.ImpactNormal.Z + BoxZ);
+	FVector NewLocation = FVector(GetActorLocation().X, GetActorLocation().Y, GroundHitResult.ImpactNormal.Z);
 	SetActorLocation(NewLocation);
 	bIsGround = true;
 }
@@ -153,11 +198,13 @@ void ATestBlock::ApplyCurVelocity()
 	CurVelocity = VelXY;
 	CurVelocity.Z = VelZ;
 	//CurVelocity = CurVelocity.GetClampedToMaxSize(MAX_SPEED);
+
+	bIsMoving = !(CurVelocity.Size2D() == 0);
 }
 
 void ATestBlock::UpdateActorLocation()
 {
-	AddActorWorldOffset(CurVelocity/10, false);
+	AddActorWorldOffset(CurVelocity, false);
 }
 
 void ATestBlock::AddFriction(float DeltaSeconds)
@@ -167,5 +214,5 @@ void ATestBlock::AddFriction(float DeltaSeconds)
 	CurVelocity.Y += FDirection.Y * MuMove * Mass * -Gravity;
 	if (FDirection.X < 0 == CurVelocity.X < 0) CurVelocity.X = 0;
 	if (FDirection.Y < 0 == CurVelocity.Y < 0) CurVelocity.Y = 0;
-	if (CurVelocity.Size2D() == 0) bIsMoving = false;
+	// if (CurVelocity.Size2D() == 0) bIsMoving = false;
 }
