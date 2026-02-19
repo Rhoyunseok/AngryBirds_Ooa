@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "Framework/Application/NavigationConfig.h"
+#include "Components/InputComponent.h"
 #include "Engine/EngineTypes.h"
 
 // =============================================================
@@ -77,6 +78,9 @@ void ABase_Bird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
     // 드래그 액션 바인딩 (누를 때 시작, 뗄 때 발사)
     PlayerInputComponent->BindAction("DragShoot", IE_Pressed, this, &ABase_Bird::OnDragStart);
     PlayerInputComponent->BindAction("DragShoot", IE_Released, this, &ABase_Bird::OnDragRelease);
+
+	// 비행 중 클릭 시 능력 발동
+	PlayerInputComponent->BindAction("DragShoot", IE_Pressed, this, &ABase_Bird::OnAbilityInput);
 }
 
 // =============================================================
@@ -84,21 +88,23 @@ void ABase_Bird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 // =============================================================
 void ABase_Bird::OnDragStart()
 {
-    APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
-    if (PC && PC->GetMousePosition(StartMousePos.X, StartMousePos.Y))
-    {
-       if (StartMousePos.IsZero()) return;
+	// [수정] 이미 발사되었다면 드래그 로직을 수행하지 않음
+	if (bHasLaunched) return; 
 
-       bIsDragging = true;
-       InitialLocation = GetActorLocation(); // 조준 시작 위치 저장
+	APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
+	if (PC && PC->GetMousePosition(StartMousePos.X, StartMousePos.Y))
+	{
+		if (StartMousePos.IsZero()) return;
 
-       // 드래그 중 물리 일시 정지 및 충돌 비활성화 (마우스 조작 우선)
-       BirdMesh->SetSimulatePhysics(false);
-       BirdMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		bIsDragging = true;
+		InitialLocation = GetActorLocation();
 
-       FInputModeGameAndUI InputMode;
-       PC->SetInputMode(InputMode);
-    }
+		BirdMesh->SetSimulatePhysics(false);
+		BirdMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		FInputModeGameAndUI InputMode;
+		PC->SetInputMode(InputMode);
+	}
 }
 
 void ABase_Bird::OnDragRelease()
@@ -306,4 +312,19 @@ void ABase_Bird::DisplayTrajectory()
        FPredictProjectilePathResult PathResult;
        UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
     }
+}
+// 특수 능력
+void ABase_Bird::OnAbilityInput()
+{
+	// 조건: 1. 발사되었는가? 2. 아직 부딪히지 않았는가? 3. 능력을 아직 안 썼는가?
+	if (bHasLaunched && !bHasHitSomething && !bAbilityUsed)
+	{
+		UseAbility(); // 실제 능력 실행
+		bAbilityUsed = true; // 중복 방지
+	}
+}
+void ABase_Bird::UseAbility()
+{
+	// 부모 클래스에서는 아무것도 하지 않거나, 공통 효과(소리 등)만 넣습니다.
+	UE_LOG(LogTemp, Log, TEXT("Base Bird Ability Called (No Effect)"));
 }
