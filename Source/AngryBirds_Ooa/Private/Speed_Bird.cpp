@@ -35,17 +35,33 @@ void ASpeed_Bird::UseAbility()
 
 void ASpeed_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	// 충돌 시에는 부모의 로직(소멸 타이머 등)을 실행해야 하므로 Super를 호출합니다.
+	// 1. 부모의 로직 호출 (bHasHitSomething = true로 만들어 부모 Tick의 회전 간섭을 차단)
 	Super::OnBirdHit(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
 
 	if (BirdMesh)
 	{
-		// 충돌 후에는 다시 중력을 켜고 회전 잠금을 해제합니다.
+		// [중요] 가속 시 껐던 물리 설정을 여기서 다시 다 킵니다.
+        
+		// 2. 중력 다시 활성화
 		BirdMesh->SetEnableGravity(true);
+
+		// 3. 공기 저항(Damping) 복구 (부모보다 좀 더 세게 줘서 팅겨나감을 방지)
 		BirdMesh->SetLinearDamping(20.0f); 
+		BirdMesh->SetAngularDamping(2.0f);
+
+		// 4. 대쉬 때 잠갔던 회전축들 다 풀어주기 (이제 자유롭게 굴러야 함)
 		BirdMesh->BodyInstance.bLockXRotation = false;
 		BirdMesh->BodyInstance.bLockYRotation = false;
 		BirdMesh->BodyInstance.bLockZRotation = false;
 		BirdMesh->BodyInstance.UpdatePhysicsFilterData();
+
+		// 5. 물리 엔진 강제 업데이트
+		// 속도를 0으로 밀어버리고 물리 엔진을 한번 깨워줍니다.
+		BirdMesh->SetPhysicsLinearVelocity(FVector::ZeroVector);
+		BirdMesh->WakeAllRigidBodies();
+
+		// 6. 바닥에 툭 떨어지는 느낌을 위해 아래 방향으로 살짝 밀어주기 (선택 사항)
+		BirdMesh->AddImpulse(FVector(0, 0, -500.0f), NAME_None, true);
 	}
 }
+

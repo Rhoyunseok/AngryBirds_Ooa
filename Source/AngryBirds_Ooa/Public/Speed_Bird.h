@@ -15,7 +15,7 @@ public:
 protected:
 	// 능력을 대쉬로 구현
 	virtual void UseAbility() override;
-
+	
 	// 대쉬 중 충돌 시 상태를 복구하기 위해 오버라이드
 	virtual void OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
 
