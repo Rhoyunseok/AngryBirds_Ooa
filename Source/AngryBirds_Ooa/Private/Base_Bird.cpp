@@ -300,7 +300,7 @@ void ABase_Bird::Tick(float DeltaTime)
 			FVector LaunchDir = FRotator(FinalPitch, YawAngle, 0.0f).Vector();
 			FVector BackwardOffset = LaunchDir * -1.0f * (StrengthRatio * MaxVisualDragDist);
 			SetActorLocation(InitialLocation + BackwardOffset);
-			DisplayTrajectory();
+
 
 
 			// 디버그로 수치 확인 (P가 마이너스면 아래, Y가 마이너스면 왼쪽 조준)
@@ -383,38 +383,4 @@ void ABase_Bird::DestroyBird()
 	// UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DeathParticle, GetActorLocation());
     
 	Destroy();
-}
-
-void ABase_Bird::DisplayTrajectory()
-{
-	if (!bIsDragging) return;
-
-	APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController());
-	FVector2D CurrentMouse;
-	if (PC && PC->GetMousePosition(CurrentMouse.X, CurrentMouse.Y))
-	{
-		// ... (발사 속도 계산 로직은 기존과 동일) ...
-		FVector2D DragDelta = CurrentMouse - StartMousePos;
-		float PitchAngle = FMath::Clamp(((FMath::Abs(DragDelta.Y) - FMath::Abs(DragDelta.X)) / MaxDragDist) * 90.0f, 0.0f, 90.0f);
-		float YawAngle = FMath::Clamp((-DragDelta.X / MaxDragDist) * 45.0f, -45.0f, 45.0f);
-        
-		FVector LaunchDir = FRotator(PitchAngle, YawAngle, 0.f).Vector();
-		float Power = FMath::Clamp(DragDelta.Size() / MaxDragDist, 0.0f, 1.0f) * 2500.0f;
-		FVector LaunchVelocity = LaunchDir * Power;
-
-		// ★ [핵심 수정] 시작 위치를 새의 앞쪽으로 밀어주기
-		// 새의 중심점에서 발사 방향(LaunchDir)으로 약 50~100 유닛 정도 앞에 생성
-		float ForwardOffset = 200.0f; 
-		FVector StartPos = GetActorLocation() + (LaunchDir * ForwardOffset);
-
-		// 예측 파라미터 설정 (StartPos 사용)
-		FPredictProjectilePathParams PathParams(10.0f, StartPos, LaunchVelocity, 2.0f);
-		PathParams.bTraceWithChannel = true;
-		PathParams.TraceChannel = ECollisionChannel::ECC_WorldStatic;
-		PathParams.DrawDebugType = EDrawDebugTrace::ForOneFrame; // 드래그 멈추면 자동으로 사라짐
-		PathParams.DrawDebugTime = 0.0f;
-        
-		FPredictProjectilePathResult PathResult;
-		UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
-	}
 }
