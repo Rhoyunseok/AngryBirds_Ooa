@@ -276,7 +276,7 @@ void ASlingShot::FireBird()
     FVector PullVector = OriginLocation - CurrentPouchLoc;
 
     // 당긴 거리에 비례해서 던질 힘을 증폭시킵니다. (Multiplier는 테스트하며 조절)
-    float ForceMultiplier = 50.0f; 
+    float ForceMultiplier = 500.0f; 
     FVector LaunchVelocity = PullVector * ForceMultiplier;
 
     // 3. 팀원에게 계산된 힘 넘겨주기!

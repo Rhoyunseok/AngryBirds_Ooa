@@ -67,7 +67,13 @@ void ASlingShotController::StopAiming()
 {
 	if (CurrentSlingshot)
 	{
+		// 1. 조준 상태를 해제하고
 		CurrentSlingshot->bIsAiming = false;
+       
+		// 2. ★ 중요 ★ 새총에 작성된 '발사 로직'을 실행시킵니다!
+		CurrentSlingshot->ReleaseString(); 
+       
+		// 3. 파우치가 돌아오는 애니메이션을 위해 설정
 		CurrentSlingshot->bIsReturning = true;
 	}
 }
