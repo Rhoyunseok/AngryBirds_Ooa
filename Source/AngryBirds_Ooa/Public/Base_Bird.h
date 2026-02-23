@@ -126,7 +126,7 @@ protected:
     bool bShowTrajectory = false;
 
     // 궤적 계산 및 그리기 함수
-    void DisplayTrajectory();
+    virtual void DisplayTrajectory();
 
     // MaxDragDist 등 기존 변수들 위치 확인
     
