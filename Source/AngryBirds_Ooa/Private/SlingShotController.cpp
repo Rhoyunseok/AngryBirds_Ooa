@@ -56,9 +56,13 @@ void ASlingShotController::AdjustPower(float AxisValue)
 {
 	if (CurrentSlingshot && CurrentSlingshot->bIsAiming)
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Cyan, TEXT("Mouse Wheel Moving!"));
 		// 휠을 굴릴 때마다 파워 증감 (민감도 조절 가능)
-		float NewPower = CurrentSlingshot->PullPower + (AxisValue * 5.0f);
-		CurrentSlingshot->PullPower = FMath::Clamp(NewPower, 0.0f, 300.0f);
+		float NewPower = CurrentSlingshot->PullPower + (AxisValue * 50.0f);
+		CurrentSlingshot->PullPower = FMath::Clamp(NewPower, 0.0f, 1000.0f);
+		// 로그를 띄워 실시간으로 수치가 변하는지 확인하세요.
+		GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Yellow, 
+			FString::Printf(TEXT("Current PullPower: %f"), CurrentSlingshot->PullPower));
 	}
 }
 
