@@ -185,7 +185,7 @@ FCornerHitData ATestBlock::CheckGround()
 void ATestBlock::SetActorGround()
 {
 	CurVelocity.Z = 0;
-	FVector NewLocation = FVector(GetActorLocation().X, GetActorLocation().Y, GroundHitResult.ImpactNormal.Z);
+	FVector NewLocation = FVector(GetActorLocation().X, GetActorLocation().Y, BoxE.Z);
 	SetActorLocation(NewLocation);
 	bIsGround = true;
 }
