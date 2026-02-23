@@ -8,7 +8,7 @@ public class AngryBirds_Ooa : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "GeometryCore", "GeometryFramework", "GeometryScriptingCore" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
