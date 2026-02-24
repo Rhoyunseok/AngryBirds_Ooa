@@ -58,13 +58,14 @@ public:
     void DestroyBird();
     
     //날라가는 함수 launch
-        void Launch(FVector LaunchVelocity);
+    void Launch(FVector LaunchVelocity);
     
+    bool bAbilityUsed = false;
 
 protected:
     bool bHasLaunched = false;
     bool bHasHitSomething = false;
-    bool bAbilityUsed = false;
+    
     
     FTimerHandle DespawnTimerHandle;
 };

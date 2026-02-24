@@ -112,6 +112,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Slingshot")
 	void DecreasePower();
 	
+	// 키보드 q를 활용하여 base bird bool bAbilityUsed = false; 의 값을true로 바꿔준다
+	UFUNCTION(BlueprintCallable, Category = "Slingshot")
+	void TriggerBirdAbility();
+	
 private:
 	// 현재 장전되어 파우치에 붙어있는 새를 기억하는 포인터
 	UPROPERTY()

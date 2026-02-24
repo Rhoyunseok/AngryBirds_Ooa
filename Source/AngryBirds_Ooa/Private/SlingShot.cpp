@@ -53,6 +53,8 @@ void ASlingShot::BeginPlay()
 	{
 		DefaultPouchLocation = Pouch->GetRelativeLocation(); // 파우치의 초기 위치를 저장 (RootComp 기준)
 	}
+	
+	
 }
 
 // Called every frame
@@ -60,6 +62,7 @@ void ASlingShot::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	
 	if (bIsAiming) // 조준 중일 때, 마우스 위치에 따라 파우치 위치 업데이트, 고무줄 업데이트
 	{
 		APlayerController* PC = GetWorld()->GetFirstPlayerController(); // 플레이어 컨트롤러 가져오기 (조준 계산에 필요)
@@ -78,8 +81,8 @@ void ASlingShot::Tick(float DeltaTime)
 		FVector CurrentPosition = Pouch->GetRelativeLocation();
 
 		// 2. 스프링 계수 (Tension: 당기는 힘, Damping: 브레이크 거는 힘)
-		float Tension = 800.0f; // 숫자가 클수록 빠르고 강하게 튕깁니다. 100~2000
-		float Damping = 15.0f;  // 숫자가 클수록 튕김이 빨리 멈춥니다. 2~50
+		float Tension = 80.0f; // 숫자가 클수록 빠르고 강하게 튕깁니다. 100~2000
+		float Damping = 5.0f;  // 숫자가 클수록 튕김이 빨리 멈춥니다. 2~50
 
 		// 3. 훅의 법칙 (Hooke's Law) 기반 가속도 계산
 		FVector SpringForce = (RestPosition - CurrentPosition) * Tension; // (현재 위치 - 쉬는 위치) * 장력 = 스프링 힘
@@ -92,7 +95,14 @@ void ASlingShot::Tick(float DeltaTime)
 
 		Pouch->SetRelativeLocation(NewLoc);
 		UpdateBands();
+		
+		//키보드 입력 q 들어오면 새 능력 발동
+		if (GetWorld()->GetFirstPlayerController()->IsInputKeyDown(EKeys::Q))
+		{
+			TriggerBirdAbility();
+		}
 	}
+	
 }
 // 3. OnConstruction 함수의 맨 아래쪽에 머티리얼 적용 코드 한 줄 추가
 // 고무줄의 머테리얼을 BandMaterial로 설정 후 업데이트 고무줄의 늘어난 정도에 따라 색상 변화 등을 BandMaterial에서 머티리얼 파라미터로 조절할 수 있게 됩니다.
@@ -277,7 +287,7 @@ void ASlingShot::FireBird()
     FVector PullVector = OriginLocation - CurrentPouchLoc;
 
     // 당긴 거리에 비례해서 던질 힘을 증폭시킵니다. (Multiplier는 테스트하며 조절)
-    float ForceMultiplier = 500.0f; 
+    float ForceMultiplier = 50.0f; 
     FVector LaunchVelocity = PullVector * ForceMultiplier;
 
     // 3. 팀원에게 계산된 힘 넘겨주기!
@@ -303,7 +313,7 @@ void ASlingShot::FireBird()
     // --------------------------------
 
     // 발사했으니 현재 장전된 새는 없다고 비워줍니다.
-    CurrentBird = nullptr;
+    // CurrentBird = nullptr;
 }
 void ASlingShot::PullString()
 {
@@ -334,4 +344,18 @@ void ASlingShot::DecreasePower()
     PullPower = FMath::Clamp(PullPower - 50.0f, 100.0f, 1000.0f);
     
     GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString::Printf(TEXT("파워 감소! 현재 최대 파워: %f"), PullPower));
+}
+
+void ASlingShot::TriggerBirdAbility()
+{
+	if (CurrentBird)
+	{
+		ABase_Bird* MyBird = Cast<ABase_Bird>(CurrentBird);
+		if (MyBird && !MyBird->bAbilityUsed)
+		{
+			MyBird->UseAbility();
+			MyBird->bAbilityUsed = true; // 능력 사용 플래그 설정
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("새 능력 발동!"));
+		}
+	}
 }
