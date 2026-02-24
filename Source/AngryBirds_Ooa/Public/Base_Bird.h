@@ -56,6 +56,10 @@ public:
     virtual void OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
     void DestroyBird();
+    
+    //날라가는 함수 launch
+        void Launch(FVector LaunchVelocity);
+    
 
 protected:
     bool bHasLaunched = false;

@@ -109,3 +109,8 @@ void ABase_Bird::DestroyBird()
 {
     Destroy();
 }
+
+void ABase_Bird::Launch(FVector LaunchVelocity)
+{
+    LaunchByVector(LaunchVelocity);
+}

@@ -6,6 +6,7 @@
 #include "GeometryScript/MeshPrimitiveFunctions.h"
 #include "Math/Plane.h" // 3D 공간 마우스 투영을 위한 수학 계산용
 #include "Engine/World.h"
+#include "Base_Bird.h"
 
 // Sets default values
 ASlingShot::ASlingShot()
@@ -36,7 +37,7 @@ ASlingShot::ASlingShot()
 	// --- 변수 초기값 설정 ---
 	bIsAiming = false;
 	bIsReturning = false; //이걸 해줘야 게임 시작시 파우치 흔들리는거 방지
-	PullPower = 1000.0f; // 당기는 힘 초기 값 = 최대값으로 시작 (조절 가능)
+	PullPower = 10.0f; // 당기는 힘 초기 값 = 최대값으로 시작 (조절 가능)
     
 	// 탄성 애니메이션 관련 변수 초기화 초기 속도 0으로 시작
 	PouchVelocity = FVector::ZeroVector;
@@ -280,24 +281,25 @@ void ASlingShot::FireBird()
     FVector LaunchVelocity = PullVector * ForceMultiplier;
 
     // 3. 팀원에게 계산된 힘 넘겨주기!
-    /*
-     * 이 부분은 팀원이 발사체 클래스(예: ABirdActor)에 만들어둔 함수를 호출하면 됩니다.
-     * * 예시:
-     * ABirdActor* MyBird = Cast<ABirdActor>(CurrentBird);
-     * if (MyBird) {
-     * MyBird->Launch(LaunchVelocity); // 팀원이 물리학적 계산을 처리할 함수
-     * }
-     */
+    
+     
+      ABase_Bird* MyBird = Cast<ABase_Bird>(CurrentBird);
+      if (MyBird) {
+		MyBird->Launch(LaunchVelocity); // 팀원이 물리학적 계산을 처리할 함수
+      	UE_LOG(LogTemp, Warning, TEXT("발사 벡터: %s"), *LaunchVelocity.ToString());
+      }
+	//
+     
 
     // ----- [임시 테스트용 코드] -----
     // 팀원 코드가 아직 없다면, 언리얼 기본 물리 시스템으로 밀어버려서 잘 날아가는지 테스트해 볼 수 있습니다.
-    UStaticMeshComponent* BirdMesh = Cast<UStaticMeshComponent>(CurrentBird->GetComponentByClass(UStaticMeshComponent::StaticClass()));
-    if (BirdMesh)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("발사 벡터: %s"), *LaunchVelocity.ToString()); // 발사 벡터 로그로 출력 (디버깅용)
-        BirdMesh->SetSimulatePhysics(true); // 물리를 켜고
-        BirdMesh->AddImpulse(LaunchVelocity, NAME_None, true); // 힘을 가합니다 (true = 질량 무시하고 속도 즉시 변경)
-    }
+    // UStaticMeshComponent* BirdMesh = Cast<UStaticMeshComponent>(CurrentBird->GetComponentByClass(UStaticMeshComponent::StaticClass()));
+    // if (BirdMesh)
+    // {
+    //     UE_LOG(LogTemp, Warning, TEXT("발사 벡터: %s"), *LaunchVelocity.ToString()); // 발사 벡터 로그로 출력 (디버깅용)
+    //     BirdMesh->SetSimulatePhysics(true); // 물리를 켜고
+    //     BirdMesh->AddImpulse(LaunchVelocity, NAME_None, true); // 힘을 가합니다 (true = 질량 무시하고 속도 즉시 변경)
+    // }
     // --------------------------------
 
     // 발사했으니 현재 장전된 새는 없다고 비워줍니다.
@@ -320,7 +322,7 @@ void ASlingShot::ReleaseString()
 void ASlingShot::IncreasePower()
 {
     // 파워를 50씩 증가시키고, 최대 1000까지만 커지게 제한합니다.
-    PullPower = FMath::Clamp(PullPower + 50.0f, 100.0f, 10000.0f);
+    PullPower = FMath::Clamp(PullPower + 50.0f, 1.0f, 1000.0f);
     
     // 에디터 화면에 현재 파워가 얼만지 파란색 글씨로 띄워줍니다!
     GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString::Printf(TEXT("파워 증가! 현재 최대 파워: %f"), PullPower));
@@ -329,7 +331,7 @@ void ASlingShot::IncreasePower()
 void ASlingShot::DecreasePower()
 {
     // 파워를 50씩 감소시키고, 최소 100 이하로는 안 내려가게 제한합니다.
-    PullPower = FMath::Clamp(PullPower - 50.0f, 100.0f, 10000.0f);
+    PullPower = FMath::Clamp(PullPower - 50.0f, 100.0f, 1000.0f);
     
     GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString::Printf(TEXT("파워 감소! 현재 최대 파워: %f"), PullPower));
 }
