@@ -100,6 +100,7 @@ void ASlingShot::Tick(float DeltaTime)
 		if (GetWorld()->GetFirstPlayerController()->IsInputKeyDown(EKeys::Q))
 		{
 			TriggerBirdAbility();
+			CurrentBird = nullptr; // 능력 발동 후 새는 더 이상 조준된 새가 아니므로 CurrentBird를 초기화
 		}
 	}
 	
