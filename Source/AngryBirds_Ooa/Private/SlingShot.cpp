@@ -37,7 +37,7 @@ ASlingShot::ASlingShot()
 	// --- 변수 초기값 설정 ---
 	bIsAiming = false;
 	bIsReturning = false; //이걸 해줘야 게임 시작시 파우치 흔들리는거 방지
-	PullPower = 10.0f; // 당기는 힘 초기 값 = 최대값으로 시작 (조절 가능)
+	PullPower = 0.1f; // 당기는 힘 초기 값 = 최대값으로 시작 (조절 가능)
     
 	// 탄성 애니메이션 관련 변수 초기화 초기 속도 0으로 시작
 	PouchVelocity = FVector::ZeroVector;

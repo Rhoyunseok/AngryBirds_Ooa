@@ -1,10 +1,17 @@
 #include "Speed_Bird.h"
 #include "Components/SkeletalMeshComponent.h"
 
-ASpeed_Bird::ASpeed_Bird()
+ASpeed_Bird::ASpeed_Bird() : Super()
 {
 	// 프로젝트 스케일에 맞춰 기본값 설정
 	DashPower = 5000.0f; 
+	// 부착 전 물리로 인한 추락 방지
+	if (BirdMesh)
+	{
+		BirdMesh->SetSimulatePhysics(false);
+		BirdMesh->SetEnableGravity(false); // 중력도 명시적으로 꺼줌
+	}
+	
 }
 
 void ASpeed_Bird::UseAbility()
