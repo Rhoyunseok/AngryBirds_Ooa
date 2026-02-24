@@ -13,13 +13,11 @@ public:
 	ASpeed_Bird();
 
 protected:
-	// 능력을 대쉬로 구현
+	// 부모의 가상 함수 오버라이드
 	virtual void UseAbility() override;
-	
-	// 대쉬 중 충돌 시 상태를 복구하기 위해 오버라이드
 	virtual void OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
 
-	// 대쉬 속도 (부모의 발사 속도 2500보다 훨씬 높게 설정)
+	// 대쉬 속도 (발사 속도보다 높게 설정)
 	UPROPERTY(EditAnywhere, Category = "Ability")
-	float DashPower = 30000.0f;
+	float DashPower;
 };

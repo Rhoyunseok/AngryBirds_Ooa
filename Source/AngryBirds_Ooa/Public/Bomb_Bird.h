@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "Base_Bird.h"
-// 타이머 기능을 위해 필요한 헤더를 미리 넣어두는 것이 안전합니다.
 #include "Engine/EngineTypes.h" 
 #include "Bomb_Bird.generated.h"
 
@@ -30,15 +29,10 @@ protected:
 	float ExplosionStrength;
 
 	// 폭발을 실행하는 함수
-	UFUNCTION() // 타이머나 델리게이트에서 호출될 수 있으므로 UFUNCTION을 붙이는 게 안전합니다.
+	UFUNCTION() 
 	void Explode();
 
 private:
 	// 지연 폭발을 위한 타이머 핸들
 	FTimerHandle BombTimerHandle;
-	
-protected:
-	// 부모의 궤적 표시 기능을 재정의합니다.
-	virtual void DisplayTrajectory() override;
-	
 };
