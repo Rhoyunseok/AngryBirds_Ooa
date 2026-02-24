@@ -77,9 +77,11 @@ public:
 	void AddFriction(float DeltaSeconds);
 	// UFUNCTION(BlueprintCallable, Category="Movement")
 	// void AddForceVector(FVector InputForce);
+	void SetTippingPhysics(FCornerHitData& HitData, float DeltaSeconds);
 	void SetActorGround();
 	void ApplyCurVelocity();
 	void UpdateActorLocation();
+	void UpdateActorRotation(FCornerHitData& HitData, FQuat DeltaQuat);
 	
 	// 상태 관련 함수
 	FCornerHitData CheckGround();

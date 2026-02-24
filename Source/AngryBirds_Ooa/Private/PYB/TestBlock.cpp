@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-
-#include "Components/BoxComponent.h"
 #include "PYB/TestBlock.h"
+#include "Components/BoxComponent.h"
+
 
 #define MAX_MOVE_SPEED 500
 #define MAX_FALL_SPEED 100
@@ -33,9 +33,9 @@ void ATestBlock::BeginPlay()
 	
 	InitConstant();
 	
-	
 	// CurVelocity = FVector(50, 50, 0);
 	// bIsMoving = true;
+	// bIsGround = true;
 }
 
 // Called every frame
@@ -44,18 +44,21 @@ void ATestBlock::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// 현재 상태 체크
-	// bIsGround = CheckGround().bBlockingHit;
-	// bIsMoving = CheckMoving();
 	if (!bIsGround)
 	{
 		GroundHitResult = CheckGround();
-		// if (!GroundHitResult.bBlockingHit)
-		// {
-		// 	AddGravity(DeltaTime);
-		// } else
-		// {
-		// 	SetActorGround();
-		// }
+		if (GroundHitResult.HitCount == 0) // 공중
+		{
+			AddGravity(DeltaTime);
+		} 
+		else if (GroundHitResult.HitCount < 4) // 불안정
+		{
+			SetTippingPhysics(GroundHitResult, DeltaTime);
+		}
+		else // 안정
+		{
+			SetActorGround();
+		}
 	}
 	if (bIsMoving && bIsGround)
 	{
@@ -64,16 +67,6 @@ void ATestBlock::Tick(float DeltaTime)
 	
 	ApplyCurVelocity();
 	UpdateActorLocation();
-	
-	// 현재 속도 변경
-	// if (bIsGround) AddGravity(DeltaTime);
-	// if (bIsMoving) AddFriction(DeltaTime);
-	
-	//CurVelocity.X = FMath::FInterpTo(CurVelocity.X, 0.0f, DeltaTime, 2.0f);
-	//CurVelocity.X = FMath::FInterpTo(CurVelocity.Y, 0.0f, DeltaTime, 2.0f);
-	
-	// FVector NewLocation = GetActorLocation() + (CurVelocity * DeltaTime);
-	// SetActorLocation(NewLocation, true);
 }
 
 void ATestBlock::InitConstant()
@@ -102,46 +95,21 @@ void ATestBlock::InitConstant()
 void ATestBlock::AddGravity(float DeltaSeconds)
 {
 	CurVelocity.Z += Gravity * DeltaSeconds;
-	
-	
-	
-	
-	// CurVelocity += Gravity * dt;
-	// FVector NewLocation = GetActorLocation() + FVector(0, 0, VerticalVelocity * dt);
-	// SetActorLocation(NewLocation, true);
 }
-
-// void ATestBlock::AddFriction(float DeltaSeconds)
-// {
-// 	if (CurVelocity.X > 0.1)
-// 	{
-// 		CurVelocity.X -= MuStop * DeltaSeconds;
-// 	}
-// 	if (CurVelocity.Y > 0.1)
-// 	{
-// 		CurVelocity.Y -= MuStop * DeltaSeconds;
-// 	}
-// }
 
 FCornerHitData ATestBlock::CheckGround()
 {
-	//FHitResult hitInfo;
-	FCollisionQueryParams params;
-	//FVector startPos = CollisionComp->GetComponentLocation();
-	//FVector endPos = startPos - 5.f;
-	
 	FVector BoxLoc = GetActorLocation();
 	FQuat BoxQuat = GetActorQuat();
-	
-	params.AddIgnoredActor(this);
-	//GetWorld()->LineTraceSingleByChannel(hitInfo, startPos, endPos, ECC_Visibility, params);
+	FCollisionQueryParams params;
 	FCornerHitData GroundResult;
 	
+	params.AddIgnoredActor(this);
 	for (int i = 0; i < 8; i++)
 	{
 		FVector WorldCorner = BoxLoc + BoxQuat.RotateVector(LocalCorners[i]);
-		FVector Start = WorldCorner + FVector(0, 0, 2.f);
-		FVector End = WorldCorner - FVector(0, 0, 5.f);
+		FVector Start = WorldCorner + FVector(0, 0, 0.5f);
+		FVector End = WorldCorner - FVector(0, 0, 0.5f);
 	
 		FHitResult hitInfo;
 		if (GetWorld()->LineTraceSingleByChannel(hitInfo, Start, End, ECC_Visibility, params))
@@ -149,13 +117,13 @@ FCornerHitData ATestBlock::CheckGround()
 			FVector PenetrationVec = WorldCorner - hitInfo.ImpactPoint;
 			float DistanceAlongNormal = FVector::DotProduct(PenetrationVec, hitInfo.ImpactNormal);
 			
-			if (DistanceAlongNormal < 0.f)
+			if (DistanceAlongNormal < 0.0f)
 			{
 				GroundResult.HitCount++;
 				GroundResult.HitIndices.Add(i);
 				GroundResult.AverageImpactPoint += hitInfo.ImpactPoint;
 				float PenetrationDepth = FMath::Abs(DistanceAlongNormal);
-				if (PenetrationDepth > GroundResult.MaxPenetration)
+				if (PenetrationDepth > 0.1f && PenetrationDepth > GroundResult.MaxPenetration)
 				{
 					GroundResult.MaxPenetration = PenetrationDepth;
 					GroundResult.SurfaceNormal = hitInfo.ImpactNormal;
@@ -166,21 +134,12 @@ FCornerHitData ATestBlock::CheckGround()
 	
 	if (GroundResult.HitCount > 0)
 	{
+		bIsGround = false;
 		GroundResult.AverageImpactPoint /= GroundResult.HitCount;
 	}
 	
 	return GroundResult;
 }
-
-// bool ATestBlock::CheckMoving()
-// {
-// 	return CurVelocity.Size2D() == 0;
-// }
-
-//void ATestBlock::AddForceVector(FVector InputForce)
-// {
-// 	CurVelocity += InputForce;
-// }
 
 void ATestBlock::SetActorGround()
 {
@@ -192,19 +151,31 @@ void ATestBlock::SetActorGround()
 
 void ATestBlock::ApplyCurVelocity()
 {	
-	FVector VelXY = FVector(CurVelocity.X, CurVelocity.Y, 0.f);
+	FVector VelXY = FVector(CurVelocity.X, CurVelocity.Y, 0.0f);
 	VelXY = VelXY.GetClampedToMaxSize(MAX_MOVE_SPEED);
 	float VelZ = CurVelocity.Z < MAX_FALL_SPEED ? CurVelocity.Z : MAX_FALL_SPEED;
 	CurVelocity = VelXY;
 	CurVelocity.Z = VelZ;
 	//CurVelocity = CurVelocity.GetClampedToMaxSize(MAX_SPEED);
 
-	bIsMoving = !(CurVelocity.Size2D() == 0);
+	bIsMoving = CurVelocity.Size2D() != 0;
 }
 
 void ATestBlock::UpdateActorLocation()
 {
 	AddActorWorldOffset(CurVelocity, false);
+}
+
+void ATestBlock::UpdateActorRotation(FCornerHitData& HitData, FQuat DeltaQuat)
+{
+	FVector PivotPoint = HitData.AverageImpactPoint;
+	FVector DistanceToPivot = GetActorLocation() - PivotPoint;
+	
+	FQuat RotationThisFrame = DeltaQuat;
+	FVector NewRelativeLocation = RotationThisFrame.RotateVector(DistanceToPivot);
+
+	SetActorLocation(PivotPoint + NewRelativeLocation);
+	AddActorWorldRotation(RotationThisFrame);
 }
 
 void ATestBlock::AddFriction(float DeltaSeconds)
@@ -214,5 +185,36 @@ void ATestBlock::AddFriction(float DeltaSeconds)
 	CurVelocity.Y += FDirection.Y * MuMove * Mass * -Gravity;
 	if (FDirection.X < 0 == CurVelocity.X < 0) CurVelocity.X = 0;
 	if (FDirection.Y < 0 == CurVelocity.Y < 0) CurVelocity.Y = 0;
-	// if (CurVelocity.Size2D() == 0) bIsMoving = false;
+}
+
+void ATestBlock::SetTippingPhysics(FCornerHitData& HitData, float DeltaSeconds)
+{
+	CurVelocity.Z = 0;
+	bIsGround = false;
+	
+	FVector Center = GetActorLocation();
+	
+	FVector ToImpact = HitData.AverageImpactPoint - Center;
+	ToImpact.Normalize();
+	
+	FVector RotationAxis = FVector::CrossProduct(ToImpact, FVector(0, 0, -1));
+	RotationAxis.Normalize();
+	
+	float TiltAmount = 1.0f - FVector::DotProduct(GetActorUpVector(), HitData.SurfaceNormal);
+	TiltAmount = FMath::Clamp(TiltAmount, 0.0f, 1.0f);
+	
+	if (TiltAmount < 0.01f)
+	{
+		SetActorGround();
+		return;
+	}
+
+	float RotationSpeed = 10.0f;
+	float AngleToRotate = TiltAmount * RotationSpeed * DeltaSeconds;
+	
+	FQuat DeltaQuat = FQuat(RotationAxis, AngleToRotate * RotationSpeed * DeltaSeconds);
+	GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Cyan, 
+	FString::Printf(TEXT("%s"), *DeltaQuat.ToString()));
+	
+	UpdateActorRotation(HitData, DeltaQuat);
 }
