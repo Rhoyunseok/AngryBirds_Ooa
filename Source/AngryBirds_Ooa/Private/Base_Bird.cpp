@@ -21,7 +21,8 @@ ABase_Bird::ABase_Bird()
     SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
     SpringArm->SetupAttachment(BirdMesh);
     SpringArm->TargetArmLength = 800.0f;
-    SpringArm->bInheritPitch = false;
+    // 새의 진행 방향에 평행한 상태로 날아가기 위해서 
+    SpringArm->bInheritPitch = false; 
     SpringArm->bInheritYaw = false;
     SpringArm->bInheritRoll = false;
 
@@ -67,7 +68,7 @@ void ABase_Bird::LaunchByVector(FVector LaunchVelocity)
 {
     if (!BirdMesh) return;
 
-    BirdMesh->SetSimulatePhysics(true);
+    BirdMesh->SetSimulatePhysics(true); 
     BirdMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     
     // ★ [추가] 물리 엔진이 충격에 의해 새를 핑글핑글 돌리는 것을 방지합니다.
@@ -90,7 +91,7 @@ void ABase_Bird::Tick(float DeltaTime)
     if (bHasLaunched && !bHasHitSomething)
     {
         FVector CurrentVelocity = BirdMesh->GetPhysicsLinearVelocity();
-        if (CurrentVelocity.Size() > 100.0f)
+        if (CurrentVelocity.Size() > 50.0f)
         {
             // 목표 회전값 계산
             FRotator TargetRot = CurrentVelocity.Rotation();
@@ -99,9 +100,11 @@ void ABase_Bird::Tick(float DeltaTime)
 
             // ★ [추가] 현재 회전에서 목표 회전까지 부드럽게 회전하도록 보간(RInterpTo)을 사용합니다.
             FRotator CurrentRot = BirdMesh->GetComponentRotation();
-            FRotator SmoothedRot = FMath::RInterpTo(CurrentRot, VisualRot, DeltaTime, 12.0f);
+            FRotator SmoothedRot = FMath::RInterpTo(CurrentRot, VisualRot, DeltaTime, 50.0f);
             
-            BirdMesh->SetWorldRotation(SmoothedRot);
+            // bTeleport를 true로 설정하여 물리 엔진과의 충돌을 방지합니다.
+            BirdMesh->SetWorldRotation(SmoothedRot, false, nullptr, ETeleportType::TeleportPhysics);
+            
         }
     }
 }
@@ -142,3 +145,10 @@ void ABase_Bird::Launch(FVector LaunchVelocity)
 {
     LaunchByVector(LaunchVelocity);
 }
+
+
+// 내가 원하는건
+/*
+ physics simulate 함수를 너가 만드는거야
+ 그래서 이걸 껐다 켰다 하는거지 engine 있는게 아니라 
+ */
