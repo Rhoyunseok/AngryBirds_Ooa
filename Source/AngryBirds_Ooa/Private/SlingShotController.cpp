@@ -45,8 +45,7 @@ void ASlingShotController::StartAiming()
 {
 	if (CurrentSlingshot)
 	{
-		
-		CurrentSlingshot->bIsAiming = true;
+		CurrentSlingshot->PullString();
 	}
 }
 

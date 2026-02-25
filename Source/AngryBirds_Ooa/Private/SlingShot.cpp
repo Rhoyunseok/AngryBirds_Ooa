@@ -109,6 +109,16 @@ void ASlingShot::UpdateAim(APlayerController* PlayerController)
             OffsetPlanePoint, 
             PlaneNormal
         );
+        DrawDebugLine( 
+            GetWorld(), 
+            MouseWorldLoc, 
+            MouseWorldLoc + (MouseWorldDir * 10000.0f), 
+            FColor::Green, 
+            false, 
+            -1.0f,
+            0, 
+            2.0f
+        );
 
         // StartAimLocation 은 PullString() 함수에서 마우스 클릭 시점의 교차점을 기록한 위치입니다.
         FVector WorldDelta = CurrentIntersection - StartAimLocation;
