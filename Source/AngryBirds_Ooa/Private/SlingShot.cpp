@@ -53,7 +53,7 @@ void ASlingShot::Tick(float DeltaTime)
     }
     else 
     {
-       FVector RestPosition = DefaultPouchLocation + FVector(0, 0, -30.0f);
+       FVector RestPosition = DefaultPouchLocation;
        FVector CurrentPosition = Pouch->GetRelativeLocation();
 
        float Tension = 80.0f; 
@@ -99,8 +99,8 @@ void ASlingShot::UpdateAim(APlayerController* PlayerController)
     if (PlayerController->DeprojectMousePositionToWorld(MouseWorldLoc, MouseWorldDir))
     {
         FVector SlingshotLoc = SlingshotBody->GetComponentLocation(); // 새총의 월드 위치
-        FVector PlaneNormal = PlayerController->PlayerCameraManager->GetCameraRotation().Vector(); // 카메라 방향의 법선 벡터.
-        
+        // FVector PlaneNormal = PlayerController->PlayerCameraManager->GetCameraRotation().Vector(); // 카메라 방향의 법선 벡터.
+        FVector PlaneNormal = -RootComp->GetForwardVector(); // 새총의 앞 방향을 평면의 법선으로 사용 (카메라 방향 대신)
         FVector OffsetPlanePoint = SlingshotLoc - (RootComp->GetForwardVector() * 150.0f);
 
         FVector CurrentIntersection = FMath::LinePlaneIntersection(
@@ -123,14 +123,30 @@ void ASlingShot::UpdateAim(APlayerController* PlayerController)
         NewLocalPouchLoc.X = DefaultPouchLocation.X - PullPower; // 휠로 조절된 값만큼 뒤로
         NewLocalPouchLoc.Y = DefaultPouchLocation.Y + LocalDelta.Y; // 마우스 좌우 오프셋
         NewLocalPouchLoc.Z = DefaultPouchLocation.Z + LocalDelta.Z; // 마우스 상하 오프셋
+        
+        if (GEngine)
+        {
+            FString DebugMsg = FString::Printf(TEXT("Mouse Z Delta: %f / Final Z: %f"), LocalDelta.Z, NewLocalPouchLoc.Z);
+            FString DebugMsgY = FString::Printf(TEXT("Mouse Y Delta: %f / Final Y: %f"), LocalDelta.Y, NewLocalPouchLoc.Y);
+            GEngine->AddOnScreenDebugMessage(1, 0.0f, FColor::Yellow, DebugMsg);
+            GEngine->AddOnScreenDebugMessage(2, 0.0f, FColor::Yellow, DebugMsgY);
+        }
 
-        // 5. 상하좌우 조준 제한 (너무 많이 꺾이지 않게)
-        NewLocalPouchLoc.Y = FMath::Clamp(NewLocalPouchLoc.Y, -150.0f, 150.0f);
-        NewLocalPouchLoc.Z = FMath::Clamp(NewLocalPouchLoc.Z, -150.0f, 150.0f);
+        // 5. 상하좌우 조준 제한 (너무 많이 꺾이지 않게) // Clamp( 값, 최소, 최대 ) 함수를 사용하여 Y와 Z축의 위치를 제한합니다. 이 범위는 필요에 따라 조절할 수 있습니다.
+        float ClampRange = 150.0f; // 이동 가능 범위
+
+        NewLocalPouchLoc.Y = FMath::Clamp(NewLocalPouchLoc.Y, 
+            DefaultPouchLocation.Y - ClampRange, 
+            DefaultPouchLocation.Y + ClampRange);
+
+        NewLocalPouchLoc.Z = FMath::Clamp(NewLocalPouchLoc.Z, 
+            DefaultPouchLocation.Z - ClampRange, 
+            DefaultPouchLocation.Z + ClampRange);
 
         // 6. 월드 위치로 변환하여 적용
         FVector NewWorldLoc = RootComp->GetComponentTransform().TransformPosition(NewLocalPouchLoc);
         Pouch->SetWorldLocation(NewWorldLoc);
+        // Pouch->SetWorldLocation(NewWorldLoc, false, nullptr, ETeleportType::TeleportPhysics);
     }
 }
 
@@ -263,6 +279,10 @@ void ASlingShot::FireBird()
 void ASlingShot::PullString()
 {
     bIsAiming = true;
+    if (Pouch)
+    {
+        Pouch->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    }
     
     // 클릭 시점 마우스의 위치를 월드 좌표로 변환하여 StartAimLocation에 저장하는 로직
     APlayerController* PC = GetWorld()->GetFirstPlayerController(); // 플레이 컨트롤러 가져오기 (현재 월드의 첫 번째 플레이어 컨트롤러)
@@ -272,8 +292,8 @@ void ASlingShot::PullString()
         if (PC->DeprojectMousePositionToWorld(MouseWorldLoc, MouseWorldDir))
         {
             FVector SlingshotLoc = SlingshotBody->GetComponentLocation(); // 새총의 월드 위치
-            FVector PlaneNormal = PC->PlayerCameraManager->GetCameraRotation().Vector(); // 카메라 방향의 법선 벡터
-            
+            // FVector PlaneNormal = PC->PlayerCameraManager->GetCameraRotation().Vector(); // 카메라 방향의 법선 벡터
+            FVector PlaneNormal = -RootComp->GetForwardVector();
             // 새총과 파우치 사이의 평면 (OffsetPlanePoint는 새총에서 뒤로 150만큼 떨어진 지점)
             FVector OffsetPlanePoint = SlingshotLoc - (RootComp->GetForwardVector() * 150.0f);
             // 클릭 시점의 교차점을 기준점으로 기록
