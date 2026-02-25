@@ -208,6 +208,7 @@ void ASlingShot::LoadBird()
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("스폰 성공! 파우치에 부착합니다."));
         CurrentBird->AttachToComponent(Pouch, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("LaunchPouch"));
+        CurrentBird->SetActorRelativeRotation(FRotator(0.0f, 180.0f, 0.0f));
     }
 }
 

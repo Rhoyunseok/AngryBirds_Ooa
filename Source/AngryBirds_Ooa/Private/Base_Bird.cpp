@@ -110,11 +110,9 @@ void ABase_Bird::Tick(float DeltaTime)
             
             // bTeleport를 true로 설정하여 물리 엔진과의 충돌을 방지합니다.
             BirdMesh->SetWorldRotation(SmoothedRot, false, nullptr, ETeleportType::TeleportPhysics);
-            
-<<<<<<< HEAD
+  
             BirdMesh->SetWorldRotation(SmoothedRot, false, nullptr, ETeleportType::TeleportPhysics);
-=======
->>>>>>> a3bda526f77de150aab24b80f5dcc52e635d2f70
+
         }
     }
 }
