@@ -116,6 +116,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Slingshot")
 	void TriggerBirdAbility();
 	
+	// MoveIgnoreActorAdd
+	
+	
 private:
 	// 현재 장전되어 파우치에 붙어있는 새를 기억하는 포인터
 	UPROPERTY()
