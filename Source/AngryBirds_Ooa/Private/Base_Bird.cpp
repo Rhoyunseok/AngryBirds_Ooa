@@ -70,6 +70,12 @@ void ABase_Bird::LaunchByVector(FVector LaunchVelocity)
     BirdMesh->SetSimulatePhysics(true);
     BirdMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     
+    // ★ 추가: 발사 직전, 새의 몸통이 날아갈 방향을 정면으로 바라보게 합니다.
+    // 모델 에셋이 -90도 돌아가 있다면 여기서도 보정이 필요합니다.
+    FRotator LaunchRot = LaunchVelocity.Rotation();
+    LaunchRot.Yaw -= 90.0f; // 에셋 보정값 적용
+    SetActorRotation(LaunchRot);
+    
     // ★ [추가] 물리 엔진이 충격에 의해 새를 핑글핑글 돌리는 것을 방지합니다.
     // 회전은 오직 우리가 Tick에서 계산하는 대로만 움직이게 됩니다.
     BirdMesh->GetBodyInstance()->bLockXRotation = true;
@@ -101,7 +107,7 @@ void ABase_Bird::Tick(float DeltaTime)
             FRotator CurrentRot = BirdMesh->GetComponentRotation();
             FRotator SmoothedRot = FMath::RInterpTo(CurrentRot, VisualRot, DeltaTime, 12.0f);
             
-            BirdMesh->SetWorldRotation(SmoothedRot);
+            BirdMesh->SetWorldRotation(SmoothedRot, false, nullptr, ETeleportType::TeleportPhysics);
         }
     }
 }
