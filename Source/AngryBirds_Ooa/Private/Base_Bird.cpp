@@ -4,6 +4,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
+#include "Kismet/GameplayStatics.h" // 카메라 제어를 위해 추가
 
 ABase_Bird::ABase_Bird()
 {
@@ -42,12 +43,9 @@ void ABase_Bird::BeginPlay()
     }
 }
 
-// [수정된 부분] 입력 바인딩
 void ABase_Bird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-    // &ABase_Bird::OnAbilityInput <- 이 부분이 헤더의 이름과 일치하는지 꼭 확인하세요!
     PlayerInputComponent->BindAction("UseAbility", IE_Pressed, this, &ABase_Bird::OnAbilityInput);
 }
 
@@ -62,7 +60,6 @@ void ABase_Bird::OnAbilityInput()
 
 void ABase_Bird::UseAbility()
 {
-    // 기본 구현 (로그만 출력)
     UE_LOG(LogTemp, Log, TEXT("Base Bird Ability Triggered"));
 }
 
@@ -73,8 +70,16 @@ void ABase_Bird::LaunchByVector(FVector LaunchVelocity)
     BirdMesh->SetSimulatePhysics(true);
     BirdMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     
-    // 속도 적용
+    // ★ [추가] 물리 엔진이 충격에 의해 새를 핑글핑글 돌리는 것을 방지합니다.
+    // 회전은 오직 우리가 Tick에서 계산하는 대로만 움직이게 됩니다.
+    BirdMesh->GetBodyInstance()->bLockXRotation = true;
+    BirdMesh->GetBodyInstance()->bLockYRotation = true;
+    BirdMesh->GetBodyInstance()->bLockZRotation = true;
+
     BirdMesh->SetAllPhysicsLinearVelocity(LaunchVelocity, false);
+    
+    // 발사 시간 기록
+    LaunchTime = GetWorld()->GetTimeSeconds();
     bHasLaunched = true;
 }
 
@@ -82,16 +87,21 @@ void ABase_Bird::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // 날아가는 동안 앞을 바라보게 함
     if (bHasLaunched && !bHasHitSomething)
     {
         FVector CurrentVelocity = BirdMesh->GetPhysicsLinearVelocity();
         if (CurrentVelocity.Size() > 100.0f)
         {
+            // 목표 회전값 계산
             FRotator TargetRot = CurrentVelocity.Rotation();
-            // 메쉬의 기본 방향에 따라 보정 (필요시 조정)
-            FRotator VisualRot = FRotator(0.0f, TargetRot.Yaw - 90.0f, -TargetRot.Pitch);
-            BirdMesh->SetWorldRotation(VisualRot, false, nullptr, ETeleportType::TeleportPhysics);
+            // 에셋 방향 보정 (사용자 모델에 맞게 조정: 현재 -90 유지)
+            FRotator VisualRot = FRotator(TargetRot.Pitch, TargetRot.Yaw - 90.0f, 0.0f);
+
+            // ★ [추가] 현재 회전에서 목표 회전까지 부드럽게 회전하도록 보간(RInterpTo)을 사용합니다.
+            FRotator CurrentRot = BirdMesh->GetComponentRotation();
+            FRotator SmoothedRot = FMath::RInterpTo(CurrentRot, VisualRot, DeltaTime, 12.0f);
+            
+            BirdMesh->SetWorldRotation(SmoothedRot);
         }
     }
 }
@@ -99,15 +109,33 @@ void ABase_Bird::Tick(float DeltaTime)
 void ABase_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
     if (bHasHitSomething) return;
-    bHasHitSomething = true;
 
-    // 3초 뒤에 삭제
-    GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABase_Bird::DestroyBird, 3.0f, false);
+    // 새총과는 이미 IgnoreActor 설정을 했으므로, 여기서 체크하는 시간은 훨씬 짧아도 됩니다.
+    if (GetWorld()->GetTimeSeconds() - LaunchTime < 0.1f) return;
+    
+    bHasHitSomething = true;
+    UE_LOG(LogTemp, Warning, TEXT("충돌 발생! 2초 후 시점 복구 예약"));
+
+    // 2초 뒤에 카메라 복귀 시작
+    GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABase_Bird::StartCameraReturn, 2.0f, false);
+}
+
+void ABase_Bird::StartCameraReturn()
+{
+    APlayerController* PC = GetWorld()->GetFirstPlayerController();
+    if (PC && ReturnTarget)
+    {
+        PC->SetViewTargetWithBlend(ReturnTarget, 1.5f, VTBlend_Cubic);
+    }
+
+    // ★ [수정] 파괴용 핸들을 별도로 사용하여 이전 타이머 핸들(DespawnTimerHandle)과 겹치지 않게 합니다.
+    FTimerHandle DestroyTimerHandle;
+    GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &ABase_Bird::DestroyBird, 1.6f, false);
 }
 
 void ABase_Bird::DestroyBird()
 {
-    Destroy();
+    this->Destroy();
 }
 
 void ABase_Bird::Launch(FVector LaunchVelocity)

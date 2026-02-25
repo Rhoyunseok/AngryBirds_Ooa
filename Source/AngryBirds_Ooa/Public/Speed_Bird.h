@@ -13,6 +13,7 @@ public:
 	ASpeed_Bird();
 
 protected:
+	
 	// 부모의 가상 함수 오버라이드
 	virtual void UseAbility() override;
 	virtual void OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;

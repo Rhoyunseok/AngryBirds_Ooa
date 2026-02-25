@@ -1,13 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 #include "Base_Bird.generated.h"
-
-class USkeletalMeshComponent;
-class USpringArmComponent;
-class UCameraComponent;
-class UProjectileMovementComponent;
 
 UCLASS()
 class ANGRYBIRDS_OOA_API ABase_Bird : public APawn
@@ -24,48 +19,45 @@ public:
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-    // --- 컴포넌트 ---
     UPROPERTY(VisibleAnywhere)
-    USceneComponent* RootScene;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-    USkeletalMeshComponent* BirdMesh;
+    class USceneComponent* RootScene;
 
     UPROPERTY(VisibleAnywhere)
-    USpringArmComponent* SpringArm;
+    class USkeletalMeshComponent* BirdMesh;
 
     UPROPERTY(VisibleAnywhere)
-    UCameraComponent* FollowCamera;
+    class USpringArmComponent* SpringArm;
 
     UPROPERTY(VisibleAnywhere)
-    UProjectileMovementComponent* ProjectileMovement;
+    class UCameraComponent* FollowCamera;
 
-    // --- 외부 호출용 함수 ---
-    UFUNCTION(BlueprintCallable)
-    void LaunchByVector(FVector LaunchVelocity);
+    UPROPERTY(VisibleAnywhere)
+    class UProjectileMovementComponent* ProjectileMovement;
 
-    // --- 입력 및 능력 관련 ---
-    // 1. 입력 바인딩용 함수 (함수 포인터용)
-    void OnAbilityInput();
+    // --- 상태 변수 ---
+    bool bHasLaunched = false;
+    bool bHasHitSomething = false;
+    bool bAbilityUsed = false;
 
-    // 2. 실제 구현부 (자식에서 override)
-    virtual void UseAbility();
+    // --- 카메라 타겟 변수 ---
+    UPROPERTY()
+    AActor* ReturnTarget; // 새총에서 지정해줄 복귀용 고정 카메라/액터
 
-    // --- 충돌 및 소멸 ---
+    FTimerHandle DespawnTimerHandle;
+
     UFUNCTION()
     virtual void OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+    void OnAbilityInput();
+    virtual void UseAbility();
+    void Launch(FVector LaunchVelocity);
+    void LaunchByVector(FVector LaunchVelocity);
+
+    // 카메라 복귀 시퀀스 함수
+    void StartCameraReturn();
     void DestroyBird();
     
-    //날라가는 함수 launch
-    void Launch(FVector LaunchVelocity);
-    
-    bool bAbilityUsed = false;
-
 protected:
-    bool bHasLaunched = false;
-    bool bHasHitSomething = false;
+    float LaunchTime = 0.0f; // 발사 시점을 저장할 변수
     
-    
-    FTimerHandle DespawnTimerHandle;
 };
