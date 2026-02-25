@@ -120,6 +120,8 @@ private:
 	// 현재 장전되어 파우치에 붙어있는 새를 기억하는 포인터
 	UPROPERTY()
 	AActor* CurrentBird;
+	
+	FVector StartAimLocation;
 protected:
 	// 새가 장전되어 있고 조준 가능한 상태인지 확인하는 변수
 	bool bCanAim = true;           // 조준 가능 상태 플래그

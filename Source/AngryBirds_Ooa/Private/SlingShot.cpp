@@ -89,34 +89,48 @@ void ASlingShot::OnConstruction(const FTransform& Transform)
     }
 }
 
+// 매 프레임 마우스 커서 위치와 휠 값을 받아와 파우치 위치를 갱신하는 함수
 void ASlingShot::UpdateAim(APlayerController* PlayerController)
 {
-    if (!bIsAiming || !PlayerController || !PlayerController->PlayerCameraManager || !Pouch || !SlingshotBody) return;
+    if (!bIsAiming || !PlayerController || !Pouch || !SlingshotBody) return;
 
-    FVector MouseWorldLoc, MouseWorldDir; 
-    if (PlayerController->DeprojectMousePositionToWorld(MouseWorldLoc, MouseWorldDir)) 
+    FVector MouseWorldLoc, MouseWorldDir; // MouseWorldLoc 은 마우스의 월드 위치 MouseWorldDir 는 마우스에서 쏘아진 광선의 방향 벡터입니다.
+    // DeprojectMousePositionToWorld() 함수는 화면상의 마우스 위치를 월드 공간의 위치와 방향으로 변환해줍니다..
+    if (PlayerController->DeprojectMousePositionToWorld(MouseWorldLoc, MouseWorldDir))
     {
-       FVector SlingshotLoc = SlingshotBody->GetComponentLocation();
-       FVector PlaneNormal = PlayerController->PlayerCameraManager->GetCameraRotation().Vector();
-       PlaneNormal.Normalize(); 
+        FVector SlingshotLoc = SlingshotBody->GetComponentLocation(); // 새총의 월드 위치
+        FVector PlaneNormal = PlayerController->PlayerCameraManager->GetCameraRotation().Vector(); // 카메라 방향의 법선 벡터.
         
-       FVector IntersectionPoint = FMath::LinePlaneIntersection(
-          MouseWorldLoc, 
-          MouseWorldLoc + (MouseWorldDir * 10000.0f), 
-          SlingshotLoc, 
-          PlaneNormal
-       );
+        FVector OffsetPlanePoint = SlingshotLoc - (RootComp->GetForwardVector() * 150.0f);
 
-       FVector OriginLocation = RootComp->GetComponentTransform().TransformPosition(DefaultPouchLocation);
-       FVector DragVector = IntersectionPoint - OriginLocation;
+        FVector CurrentIntersection = FMath::LinePlaneIntersection(
+            MouseWorldLoc, 
+            MouseWorldLoc + (MouseWorldDir * 10000.0f), 
+            OffsetPlanePoint, 
+            PlaneNormal
+        );
 
-       if (DragVector.Size() > PullPower) 
-       {
-          DragVector = DragVector.GetSafeNormal() * PullPower;
-       }
+        // StartAimLocation 은 PullString() 함수에서 마우스 클릭 시점의 교차점을 기록한 위치입니다.
+        FVector WorldDelta = CurrentIntersection - StartAimLocation;
 
-       FVector NewPouchLoc = OriginLocation + DragVector;
-       Pouch->SetWorldLocation(NewPouchLoc);
+        // 3. 이 차이값을 슬링샷의 로컬 좌표계로 변환 (상하좌우 방향 추출)
+        FVector LocalDelta = RootComp->GetComponentTransform().InverseTransformVector(WorldDelta);
+
+        // 4. 최종 로컬 위치 조립
+        // Local X: 휠로 조절하는 PullPower (뒤로 당겨지는 힘)
+        // Local Y, Z: 마우스 드래그로 조절하는 상하좌우 조준
+        FVector NewLocalPouchLoc;
+        NewLocalPouchLoc.X = DefaultPouchLocation.X - PullPower; // 휠로 조절된 값만큼 뒤로
+        NewLocalPouchLoc.Y = DefaultPouchLocation.Y + LocalDelta.Y; // 마우스 좌우 오프셋
+        NewLocalPouchLoc.Z = DefaultPouchLocation.Z + LocalDelta.Z; // 마우스 상하 오프셋
+
+        // 5. 상하좌우 조준 제한 (너무 많이 꺾이지 않게)
+        NewLocalPouchLoc.Y = FMath::Clamp(NewLocalPouchLoc.Y, -150.0f, 150.0f);
+        NewLocalPouchLoc.Z = FMath::Clamp(NewLocalPouchLoc.Z, -150.0f, 150.0f);
+
+        // 6. 월드 위치로 변환하여 적용
+        FVector NewWorldLoc = RootComp->GetComponentTransform().TransformPosition(NewLocalPouchLoc);
+        Pouch->SetWorldLocation(NewWorldLoc);
     }
 }
 
@@ -245,9 +259,34 @@ void ASlingShot::FireBird()
     }
 }
 
+// 마우스 클릭을 하면 실행 되는 함수
 void ASlingShot::PullString()
 {
-    bIsAiming = true; 
+    bIsAiming = true;
+    
+    // 클릭 시점 마우스의 위치를 월드 좌표로 변환하여 StartAimLocation에 저장하는 로직
+    APlayerController* PC = GetWorld()->GetFirstPlayerController(); // 플레이 컨트롤러 가져오기 (현재 월드의 첫 번째 플레이어 컨트롤러)
+    if (PC && PC->PlayerCameraManager) // 플레이어 컨트롤과 카메라 매니저가 유효한지 확인 카메라 매니지는 카메라의 방향 벡터를 얻기 위해 필요합니다.
+    {
+        FVector MouseWorldLoc, MouseWorldDir; // MouseWorldLoc 은 마우스의 월드 위치 MouseWorldDir
+        if (PC->DeprojectMousePositionToWorld(MouseWorldLoc, MouseWorldDir))
+        {
+            FVector SlingshotLoc = SlingshotBody->GetComponentLocation(); // 새총의 월드 위치
+            FVector PlaneNormal = PC->PlayerCameraManager->GetCameraRotation().Vector(); // 카메라 방향의 법선 벡터
+            
+            // 새총과 파우치 사이의 평면 (OffsetPlanePoint는 새총에서 뒤로 150만큼 떨어진 지점)
+            FVector OffsetPlanePoint = SlingshotLoc - (RootComp->GetForwardVector() * 150.0f);
+            // 클릭 시점의 교차점을 기준점으로 기록
+            // LinePlaneIntersection 함수를 사용하여 마우스에서 쏘아진 광선과 평면의 교차점을 계산 LinePlaneIntersection(광선 시작점, 광선 방향, 평면의 한 점, 평면의 법선 벡터) 
+            // 여기서 MouseWorldDir * 10000.0f는 광선을 충분히 멀리 쏘아주는 역할을 합니다. 이 광선과 평면의 교차점이 StartAimLocation이 됩니다.
+            StartAimLocation = FMath::LinePlaneIntersection(
+                MouseWorldLoc, 
+                MouseWorldLoc + (MouseWorldDir * 10000.0f), 
+                OffsetPlanePoint, 
+                PlaneNormal
+            );
+        }
+    }
 }
 
 void ASlingShot::ReleaseString()
