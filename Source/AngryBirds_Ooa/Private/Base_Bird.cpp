@@ -207,11 +207,26 @@ void ABase_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 void ABase_Bird::StartCameraReturn()
 {
     APlayerController* PC = GetWorld()->GetFirstPlayerController();
-    if (PC && ReturnTarget)
+    if (PC)
     {
-        PC->SetViewTargetWithBlend(ReturnTarget, 1.5f, VTBlend_Cubic);
+        // 1. 월드에서 "MainCamera" 태그를 가진 모든 액터를 찾습니다.
+        TArray<AActor*> FoundActors;
+        UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("MainCamera"), FoundActors);
+        
+        if (FoundActors.Num() > 0)
+        {
+            // 2. 첫 번째로 찾은 카메라 액터로 화면을 부드럽게 돌립니다.
+            PC->SetViewTargetWithBlend(FoundActors[0], 1.5f, VTBlend_Cubic);
+            UE_LOG(LogTemp, Warning, TEXT("태그로 메인 카메라를 찾았습니다!"));
+        }
+        else if (ReturnTarget)
+        {
+            // 태그로 못 찾았을 경우를 대비한 예외 처리
+            PC->SetViewTargetWithBlend(ReturnTarget, 1.5f, VTBlend_Cubic);
+        }
     }
 
+    // 카메라 전환 중에 새가 사라지면 어색하므로 타이머를 맞춥니다.
     FTimerHandle DestroyTimerHandle;
     GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &ABase_Bird::DestroyBird, 1.6f, false);
 }
