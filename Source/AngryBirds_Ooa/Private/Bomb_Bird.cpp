@@ -47,6 +47,17 @@ void ABomb_Bird::Explode()
     GetWorldTimerManager().ClearTimer(BombTimerHandle);
     bAbilityUsed = true;
 
+    // --- 카메라 고정 로직 추가 ---
+    // 폭발하는 순간 새의 움직임을 멈춰서 카메라가 더 이상 이동하지 않게 합니다.
+    bUseCustomPhysics = false; 
+    CustomVelocity = FVector::ZeroVector; 
+    
+    if (BirdMesh)
+    {
+        BirdMesh->SetSimulatePhysics(false); // 물리 중단
+        BirdMesh->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
+    }
+    
     FVector ExplodeLocation = BirdMesh->GetComponentLocation(); 
 
     // 1. 시각적 효과 (디버그 구체)
