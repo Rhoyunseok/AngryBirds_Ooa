@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "Components/SphereComponent.h"
 #include "Base_Bird.generated.h"
 
 UCLASS()
@@ -69,4 +70,8 @@ public:
     
 protected:
     float LaunchTime = 0.0f; 
+    
+protected:
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    class USphereComponent* CollisionSphere;
 };
