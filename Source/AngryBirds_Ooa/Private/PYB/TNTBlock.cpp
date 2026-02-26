@@ -9,8 +9,8 @@ ATNTBlock::ATNTBlock()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	ExplosionRadius = 500.0f;
-	ExplosionStrength = 7000.0f;
+	ExplosionRadius = 300.0f;
+	ExplosionStrength = 700000.0f;
 }
 
 // Called when the game starts or when spawned
