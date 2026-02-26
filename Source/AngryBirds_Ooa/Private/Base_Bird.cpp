@@ -4,7 +4,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
-#include "Kismet/GameplayStatics.h" // 카메라 제어를 위해 추가
+#include "Kismet/GameplayStatics.h"
 
 ABase_Bird::ABase_Bird()
 {
@@ -15,33 +15,33 @@ ABase_Bird::ABase_Bird()
 
     BirdMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BirdMesh"));
     BirdMesh->SetupAttachment(RootScene);
-    BirdMesh->SetSimulatePhysics(false); // 새총 발사 전까지 물리 끔
+    
+    BirdMesh->SetSimulatePhysics(false); 
     BirdMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
 
     SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-    SpringArm->SetupAttachment(BirdMesh);
+    SpringArm->SetupAttachment(RootComponent); 
     SpringArm->TargetArmLength = 800.0f;
-    // 새의 진행 방향에 평행한 상태로 날아가기 위해서 
-    SpringArm->bInheritPitch = false; 
-    SpringArm->bInheritYaw = false;
-    SpringArm->bInheritRoll = false;
+    
+    SpringArm->SetRelativeRotation(FRotator::ZeroRotator);
+    SpringArm->bInheritPitch = true; 
+    SpringArm->bInheritYaw = true; 
+    SpringArm->bInheritRoll = true;
 
+    SpringArm->bUsePawnControlRotation = false;
+    SpringArm->bEnableCameraLag = true;
+    SpringArm->CameraLagSpeed = 10.0f;
+    
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
     FollowCamera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 
-    ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-    ProjectileMovement->UpdatedComponent = BirdMesh;
-    ProjectileMovement->bAutoActivate = false;
+    bUseCustomPhysics = false;
+    GravityConstant = FVector(0.0f, 0.0f, -980.0f); 
 }
 
 void ABase_Bird::BeginPlay()
 {
     Super::BeginPlay();
-    if (BirdMesh)
-    {
-        BirdMesh->OnComponentHit.AddDynamic(this, &ABase_Bird::OnBirdHit);
-        BirdMesh->SetNotifyRigidBodyCollision(true);
-    }
 }
 
 void ABase_Bird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -68,51 +68,67 @@ void ABase_Bird::LaunchByVector(FVector LaunchVelocity)
 {
     if (!BirdMesh) return;
 
-    BirdMesh->SetSimulatePhysics(true); 
-    BirdMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-    
-    // ★ 추가: 발사 직전, 새의 몸통이 날아갈 방향을 정면으로 바라보게 합니다.
-    // 모델 에셋이 -90도 돌아가 있다면 여기서도 보정이 필요합니다.
-    FRotator LaunchRot = LaunchVelocity.Rotation();
-    LaunchRot.Yaw -= 90.0f; // 에셋 보정값 적용
-    SetActorRotation(LaunchRot);
-    
-    // ★ [추가] 물리 엔진이 충격에 의해 새를 핑글핑글 돌리는 것을 방지합니다.
-    // 회전은 오직 우리가 Tick에서 계산하는 대로만 움직이게 됩니다.
-    BirdMesh->GetBodyInstance()->bLockXRotation = true;
-    BirdMesh->GetBodyInstance()->bLockYRotation = true;
-    BirdMesh->GetBodyInstance()->bLockZRotation = true;
+    // ★ [핵심 추가] 부모(새총)로부터 완전히 분리합니다. 
+    // 부착된 상태에서는 위치 변경(SetActorLocation)이 무시됩니다.
+    this->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 
-    BirdMesh->SetAllPhysicsLinearVelocity(LaunchVelocity, false);
+    // ★ [핵심 추가] 모빌리티를 Movable로 강제 설정
+    RootComponent->SetMobility(EComponentMobility::Movable);
+
+    BirdMesh->SetSimulatePhysics(false); 
+    BirdMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     
-    // 발사 시간 기록
-    LaunchTime = GetWorld()->GetTimeSeconds();
+    // 발사 방향으로 즉시 회전
+    SetActorRotation(LaunchVelocity.Rotation());
+    BirdMesh->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+
+    CustomVelocity = LaunchVelocity;
+    bUseCustomPhysics = true; 
     bHasLaunched = true;
+    LaunchTime = GetWorld()->GetTimeSeconds();
+
+    UE_LOG(LogTemp, Warning, TEXT("커스텀 물리 발사 시작! 속도: %s"), *CustomVelocity.ToString());
 }
 
 void ABase_Bird::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    if (bHasLaunched && !bHasHitSomething)
+    if (bUseCustomPhysics && !bHasHitSomething)
     {
-        FVector CurrentVelocity = BirdMesh->GetPhysicsLinearVelocity();
-        if (CurrentVelocity.Size() > 50.0f)
+        HandleCustomPhysics(DeltaTime);
+    }
+}
+
+void ABase_Bird::HandleCustomPhysics(float DeltaTime)
+{
+    FVector CurrentLocation = GetActorLocation();
+    
+    // 중력 가속도 적용
+    CustomVelocity += GravityConstant * DeltaTime;
+    
+    // 다음 위치 (P = P0 + V*t)
+    FVector NextLocation = CurrentLocation + (CustomVelocity * DeltaTime);
+
+    // 진행 방향으로 회전 동기화
+    if (CustomVelocity.Size() > 20.0f)
+    {
+        SetActorRotation(CustomVelocity.Rotation());
+        BirdMesh->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+    }
+
+    // ★ [핵심 수정] TeleportPhysics 옵션을 사용하여 위치를 강제 이동시킵니다.
+    FHitResult HitResult;
+    bool bMoved = SetActorLocation(NextLocation, true, &HitResult, ETeleportType::TeleportPhysics);
+
+    // 이동 중 장애물 충돌 감지
+    if (HitResult.bBlockingHit)
+    {
+        // 발사 직후 자기 자신/새총 충돌 방지 (0.1초 유예)
+        if (GetWorld()->GetTimeSeconds() - LaunchTime > 0.1f)
         {
-            // 목표 회전값 계산
-            FRotator TargetRot = CurrentVelocity.Rotation();
-            // 에셋 방향 보정 (사용자 모델에 맞게 조정: 현재 -90 유지)
-            FRotator VisualRot = FRotator(TargetRot.Pitch, TargetRot.Yaw - 90.0f, 0.0f);
-
-            // ★ [추가] 현재 회전에서 목표 회전까지 부드럽게 회전하도록 보간(RInterpTo)을 사용합니다.
-            FRotator CurrentRot = BirdMesh->GetComponentRotation();
-            FRotator SmoothedRot = FMath::RInterpTo(CurrentRot, VisualRot, DeltaTime, 50.0f);
-            
-            // bTeleport를 true로 설정하여 물리 엔진과의 충돌을 방지합니다.
-            BirdMesh->SetWorldRotation(SmoothedRot, false, nullptr, ETeleportType::TeleportPhysics);
-  
-            BirdMesh->SetWorldRotation(SmoothedRot, false, nullptr, ETeleportType::TeleportPhysics);
-
+            bUseCustomPhysics = false;
+            OnBirdHit(HitResult.GetComponent(), HitResult.GetActor(), nullptr, FVector::ZeroVector, HitResult);
         }
     }
 }
@@ -121,13 +137,9 @@ void ABase_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 {
     if (bHasHitSomething) return;
 
-    // 새총과는 이미 IgnoreActor 설정을 했으므로, 여기서 체크하는 시간은 훨씬 짧아도 됩니다.
-    if (GetWorld()->GetTimeSeconds() - LaunchTime < 0.1f) return;
-    
     bHasHitSomething = true;
-    UE_LOG(LogTemp, Warning, TEXT("충돌 발생! 2초 후 시점 복구 예약"));
+    UE_LOG(LogTemp, Warning, TEXT("커스텀 물리 충돌 감지!"));
 
-    // 2초 뒤에 카메라 복귀 시작
     GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABase_Bird::StartCameraReturn, 2.0f, false);
 }
 
@@ -139,7 +151,6 @@ void ABase_Bird::StartCameraReturn()
         PC->SetViewTargetWithBlend(ReturnTarget, 1.5f, VTBlend_Cubic);
     }
 
-    // ★ [수정] 파괴용 핸들을 별도로 사용하여 이전 타이머 핸들(DespawnTimerHandle)과 겹치지 않게 합니다.
     FTimerHandle DestroyTimerHandle;
     GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &ABase_Bird::DestroyBird, 1.6f, false);
 }
@@ -153,10 +164,3 @@ void ABase_Bird::Launch(FVector LaunchVelocity)
 {
     LaunchByVector(LaunchVelocity);
 }
-
-
-// 내가 원하는건
-/*
- physics simulate 함수를 너가 만드는거야
- 그래서 이걸 껐다 켰다 하는거지 engine 있는게 아니라 
- */

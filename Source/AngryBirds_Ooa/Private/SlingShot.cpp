@@ -158,6 +158,31 @@ void ASlingShot::UpdateAim(APlayerController* PlayerController)
         FVector NewWorldLoc = RootComp->GetComponentTransform().TransformPosition(NewLocalPouchLoc);
         Pouch->SetWorldLocation(NewWorldLoc);
         // Pouch->SetWorldLocation(NewWorldLoc, false, nullptr, ETeleportType::TeleportPhysics);
+        
+        // ★ [추가] 새가 땡겨지는 방향을 바라보게 하는 로직
+        if (CurrentBird)
+        {
+            // 발사 원점 (기본 파우치 위치)
+            FVector OriginLocation = RootComp->GetComponentTransform().TransformPosition(DefaultPouchLocation);
+            // 현재 당겨진 파우치 위치
+            FVector CurrentPouchLoc = Pouch->GetComponentLocation();
+        
+            // 발사 벡터 = 원점 - 현재위치 (뒤로 당길수록 앞을 향함)
+            FVector LaunchVec = OriginLocation - CurrentPouchLoc;
+
+            if (!LaunchVec.IsNearlyZero())
+            {
+                // 벡터를 회전값으로 변환
+                FRotator TargetRot = LaunchVec.Rotation();
+
+                // 만약 새 모델 에셋이 기본적으로 옆을 보고 있다면(예: -90도) 보정값을 더해줍니다.
+                // TargetRot.Yaw -= 90.0f; 
+
+                // 새의 월드 회전값을 발사 방향으로 즉시 업데이트
+                // 이 때 SpringArm이 BirdMesh에 붙어 있으므로 카메라도 같이 회전합니다.
+                CurrentBird->SetActorRotation(TargetRot);
+            }
+        }
     }
 }
 
