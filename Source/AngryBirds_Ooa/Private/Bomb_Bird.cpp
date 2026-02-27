@@ -12,11 +12,8 @@ ABomb_Bird::ABomb_Bird()
 
 void ABomb_Bird::UseAbility()
 {
-    // 이미 능력을 사용했거나 아직 발사 전이면 무시
-    // bAbilityUsed, bHasLaunched는 부모인 Base_Bird의 멤버 변수입니다.
     if (bAbilityUsed || !bHasLaunched) return;
 
-    // 비행 중 클릭 시 즉시 폭발
     if (!bHasHitSomething)
     {
         UE_LOG(LogTemp, Warning, TEXT("BombBird: 공중 폭발 실행!"));
@@ -26,53 +23,57 @@ void ABomb_Bird::UseAbility()
 
 void ABomb_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-    // 부모의 OnBirdHit를 먼저 호출하여 기본적인 상태 변경(bHasHitSomething = true 등)을 수행
+    // 부모 클래스의 OnBirdHit에서 물리 시뮬레이션이 켜집니다.
     Super::OnBirdHit(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
 
-    // 충돌 시 능력을 아직 사용하지 않았다면 1초 뒤 자동 폭발 예약
     if (!bAbilityUsed)
     {
-        bAbilityUsed = true; // 중복 예약 방지
-        UE_LOG(LogTemp, Log, TEXT("BombBird: 충돌 확인, 1초 후 지연 폭발"));
+        bAbilityUsed = true; 
+        UE_LOG(LogTemp, Log, TEXT("BombBird: 충돌 확인, 1초 후 지연 폭발 예약"));
 
+        // 1초 뒤에 현재 굴러가있는 위치를 체크하여 터뜨립니다.
         GetWorldTimerManager().SetTimer(BombTimerHandle, this, &ABomb_Bird::Explode, 1.0f, false);
     }
 }
 
 void ABomb_Bird::Explode()
 {
-    // 중복 실행 방지
-    if (!BirdMesh || !bHasLaunched) return;
-    
-    // 이미 폭발 프로세스가 시작되었다면 무시 (TimerHandle 등으로 체크 가능)
+    // 1. 안전 검사 및 중복 실행 방지
+    if (!BirdMesh) return;
     GetWorldTimerManager().ClearTimer(BombTimerHandle);
     bAbilityUsed = true;
 
-    // 1. 물리 및 이동 중단 (카메라 고정 효과)
+    // 물리 엔진에 의해 따로 놀고 있는 Mesh의 실제 월드 위치를 가져옵니다.
+    FVector RealWorldLocation = BirdMesh->GetComponentLocation();
+    
+    // 디버그 로그로 실제 위치 확인
+    UE_LOG(LogTemp, Error, TEXT("BombBird: Explode 호출됨! 실제 메쉬 위치: %s"), *RealWorldLocation.ToString());
+
+    // 2. 액터의 루트를 메쉬가 있는 곳으로 강제 이동
+    // DrawDebugSphere와 카메라 시스템이 정확한 위치를 잡음
+    SetActorLocation(RealWorldLocation, false, nullptr, ETeleportType::TeleportPhysics);
+
+    // 3. 물리 중단 및 외형 숨기기
     bUseCustomPhysics = false; 
     CustomVelocity = FVector::ZeroVector; 
     
-    if (BirdMesh)
-    {
-        BirdMesh->SetSimulatePhysics(false);
-        BirdMesh->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
-        BirdMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); // 추가 충돌 방지
-        BirdMesh->SetVisibility(false); // 폭발했으므로 새의 모습은 감춤
-    }
-    
-    FVector ExplodeLocation = GetActorLocation(); 
+    BirdMesh->SetSimulatePhysics(false);
+    BirdMesh->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
+    BirdMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    BirdMesh->SetVisibility(false); 
 
-    // 2. 폭발 시각 효과 (디버그 구체)
-    DrawDebugSphere(GetWorld(), ExplodeLocation, ExplosionRadius, 32, FColor::Red, false, 2.0f, 0, 2.0f);
+    // 4. 시각적 효과 (디버그 구체) - SetActorLocation을 했으므로 GetActorLocation()과 동일합니다.
+    DrawDebugSphere(GetWorld(), RealWorldLocation, ExplosionRadius, 32, FColor::Red, false, 2.0f, 0, 2.0f);
 
-    // 3. 주변 물리 객체 탐색 및 충격 적용
+    // 5. 주변 물리 객체 탐색 및 충격 적용
     TArray<FHitResult> OutHits;
     FCollisionShape SphereShape = FCollisionShape::MakeSphere(ExplosionRadius);
 
+    // 실제 메쉬 위치(RealWorldLocation) 기준으로 Sweep 수행
     bool bHit = GetWorld()->SweepMultiByChannel(
         OutHits, 
-        ExplodeLocation, 
-        ExplodeLocation, 
+        RealWorldLocation, 
+        RealWorldLocation, 
         FQuat::Identity, 
         ECC_PhysicsBody, 
         SphereShape
@@ -85,39 +86,36 @@ void ABomb_Bird::Explode()
             UPrimitiveComponent* TargetComp = Hit.GetComponent();
             if (TargetComp && TargetComp->IsSimulatingPhysics())
             {
-                float Distance = FVector::Dist(ExplodeLocation, TargetComp->GetComponentLocation());
+                float Distance = FVector::Dist(RealWorldLocation, TargetComp->GetComponentLocation());
                 float DistanceRatio = FMath::Clamp(Distance / ExplosionRadius, 0.0f, 1.0f);
                 float PowerAlpha = FMath::Lerp(1.0f, 0.7f, DistanceRatio);
 
                 TargetComp->AddRadialImpulse(
-                    ExplodeLocation, 
+                    RealWorldLocation, 
                     ExplosionRadius, 
                     ExplosionStrength * PowerAlpha, 
                     ERadialImpulseFalloff::RIF_Constant, 
                     true 
                 );
             }
-            
             AActor* HitActor = Hit.GetActor();
             if (HitActor)
             {
                 UGameplayStatics::ApplyRadialDamage(
                 this, 
                 100, 
-                ExplodeLocation, 
+                RealWorldLocation, 
                 ExplosionRadius, 
                 UDamageType::StaticClass(), 
                 TArray<AActor*>(), 
                 this
                 );
             }
+            // 여기까지 코드 추가
         }
     }
 
-    // --- [핵심 수정 부분] ---
-    // 4. 부모(Base_Bird)의 카메라 복귀 로직을 호출합니다.
-    // 폭발의 여운을 보여주기 위해 1초 정도 뒤에 카메라를 돌립니다.
+    // 6. 카메라 복귀 호출 (Base_Bird의 로직 사용)
+    // 1초 뒤에 카메라를 돌립니다.
     GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABomb_Bird::StartCameraReturn, 1.0f, false);
-    
-    UE_LOG(LogTemp, Warning, TEXT("BombBird: 폭발 완료, 1초 후 카메라 복귀 시작"));
 }
