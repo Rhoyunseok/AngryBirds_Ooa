@@ -26,10 +26,10 @@ ABase_Bird::ABase_Bird()
     SpringArm->SetupAttachment(RootComponent); 
     SpringArm->TargetArmLength = 800.0f;
     
-    // ★ [수정] 진행 방향을 바라보도록 설정
+    // 진행 방향을 바라보도록 설정
     SpringArm->bUsePawnControlRotation = false; // 컨트롤러 회전 대신 액터 회전 사용
     
-    // ★ [중요] 일단 모두 true로 둡니다 (그래야 새가 꺾이는 방향을 따라감)
+    // 일단 모두 true로 두어 새가 꺾이는 방향을 따라가게 설정
     SpringArm->bInheritPitch = true;
     SpringArm->bInheritYaw = true;
     SpringArm->bInheritRoll = true;
@@ -108,7 +108,7 @@ void ABase_Bird::Tick(float DeltaTime)
     {
         HandleCustomPhysics(DeltaTime);
     }
-    // ★ [추가] 카메라 수평 유지 로직
+    // 카메라 수평 유지 로직
     if (bHasLaunched && SpringArm)
     {
         // 현재 액터(새)의 회전값을 가져옵니다.
@@ -116,7 +116,6 @@ void ABase_Bird::Tick(float DeltaTime)
         
         // Yaw(좌우 회전)는 새를 따라가되, 
         // Pitch(위아래)와 Roll(기울기)은 고정하여 화면이 뒤집히지 않게 합니다.
-        // -20.0f 정도를 주면 약간 위에서 아래로 내려다보는 좋은 각도가 됩니다.
         FRotator DesiredRot = FRotator(-20.0f, CurrentRot.Yaw, 0.0f);
         
         // SpringArm에 직접 월드 회전값을 꽂아넣어 상속을 무시하게 만듭니다.
@@ -159,15 +158,15 @@ void ABase_Bird::HandleCustomPhysics(float DeltaTime)
         
         if (GetWorld()->GetTimeSeconds() - LaunchTime > 0.1f)
         {
-            // ★ [핵심 추가] 부딪힌 상대방이 물리 시뮬레이션 중이라면 힘을 가합니다.
+            // 부딪힌 상대방이 물리 시뮬레이션 중이라면 힘을 가합니다.
             if (HitResult.GetComponent() && HitResult.GetComponent()->IsSimulatingPhysics())
             {
                 // 부딪힌 지점에 발사 속도 방향으로 충격(Impulse)을 줍니다.
-                // 100.0f는 무게(Mass)에 비례한 힘의 세기입니다. 너무 약하면 수치를 올리세요.
+                // 100.0f는 무게(Mass)에 비례한 힘의 세기입니다. 
                 HitResult.GetComponent()->AddImpulseAtLocation(CustomVelocity * 100.0f, HitResult.ImpactPoint);
             }
             
-            // ★ [수정] 부딪혔을 때 속도를 반사시킵니다. (0.5f는 탄성률: 절반의 힘으로 튕김)
+            // 부딪혔을 때 속도를 반사시킵니다. (0.5f는 탄성률: 절반의 힘으로 튕김)
             CustomVelocity = FMath::GetReflectionVector(CustomVelocity, HitResult.Normal) * 0.5f;
             
             // OnBirdHit 호출 (이제 이 안에서 물리 시뮬레이션이 켜집니다)
@@ -185,7 +184,7 @@ void ABase_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
     if (bHasHitSomething) return;
     bHasHitSomething = true;
 
-    // ★ [핵심] 커스텀 물리 계산을 중단하고 엔진 물리를 활성화
+    // 커스텀 물리 계산을 중단하고 엔진 물리를 활성화
     bUseCustomPhysics = false;
 
     if (BirdMesh)
@@ -237,7 +236,7 @@ void ABase_Bird::StartCameraReturn()
 void ABase_Bird::DestroyBird()
 {
     
-    // ★ [추가] 새가 파괴되기 직전에 새총에게 새로운 새를 장전하라고 명령합니다.
+    // 새가 파괴되기 직전에 새총에게 새로운 새를 장전하라고 명령합니다.
     if (ReturnTarget)
     {
         // ReturnTarget이 ASlingShot 클래스인지 확인하고 형변환합니다.
@@ -246,7 +245,7 @@ void ABase_Bird::DestroyBird()
         {
             Slingshot->LoadBird(); // 새로운 새 스폰 및 파우치에 부착
             
-            // (선택 사항) 만약 장전될 때 새총의 충돌을 다시 켜야 한다면 아래 주석을 해제하세요.
+            // 만약 장전될 때 새총의 충돌을 다시 켜야 한다면 아래 주석을 해제
             // Slingshot->SetActorEnableCollision(true); 
         }
     }
