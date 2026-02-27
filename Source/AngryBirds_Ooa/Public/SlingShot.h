@@ -64,7 +64,7 @@ public:
 
 	// 마우스 휠로 조절할 파워 (파우치가 뒤로 당겨지는 Z 또는 X축 깊이)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slingshot|State")
-	float PullPower;
+	float PullPower = 5.0f;
 
 	// 파우치의 원래 위치 (발사 후 되돌아가기 위함)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Slingshot|State")

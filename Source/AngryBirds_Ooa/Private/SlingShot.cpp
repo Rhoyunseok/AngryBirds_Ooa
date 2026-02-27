@@ -233,7 +233,7 @@ void ASlingShot::UpdateBands()
 
             FTransform LeftCylTransform(LeftRotator, LeftHornLocal);
             FTransform RightCylTransform(RightRotator, RightHornLocal);
-
+            
             float LeftRadius = FMath::Clamp(20.0f * (20.0f / FMath::Max(LeftLength, 1.0f)), 0.3f, 10.0f);
             float RightRadius = FMath::Clamp(20.0f * (20.0f / FMath::Max(RightLength, 1.0f)), 0.3f, 10.0f);
             
@@ -322,6 +322,7 @@ void ASlingShot::FireBird()
 void ASlingShot::PullString()
 {
     bIsAiming = true;
+    PullPower = 5.0f;
     if (Pouch)
     {
         Pouch->SetCollisionEnabled(ECollisionEnabled::NoCollision);
