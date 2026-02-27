@@ -97,6 +97,20 @@ void ABomb_Bird::Explode()
                     true 
                 );
             }
+            
+            AActor* HitActor = Hit.GetActor();
+            if (HitActor)
+            {
+                UGameplayStatics::ApplyRadialDamage(
+                this, 
+                100, 
+                ExplodeLocation, 
+                ExplosionRadius, 
+                UDamageType::StaticClass(), 
+                TArray<AActor*>(), 
+                this
+                );
+            }
         }
     }
 

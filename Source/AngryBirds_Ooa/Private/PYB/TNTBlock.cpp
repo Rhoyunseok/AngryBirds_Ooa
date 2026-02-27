@@ -3,6 +3,8 @@
 
 #include "PYB/TNTBlock.h"
 
+#include "Kismet/GameplayStatics.h"
+
 // Sets default values
 ATNTBlock::ATNTBlock()
 {
@@ -36,6 +38,7 @@ void ATNTBlock::Explode()
 	// 2. 360도 범위 물리 충격
 	TArray<FHitResult> OutHits;
 	FCollisionShape SphereShape = FCollisionShape::MakeSphere(ExplosionRadius);
+	
 
 	bool bHit = GetWorld()->SweepMultiByChannel(
 		OutHits, 
@@ -74,6 +77,20 @@ void ATNTBlock::Explode()
 					ERadialImpulseFalloff::RIF_Constant, 
 					true 
 				);
+				
+				AActor* HitActor = Hit.GetActor();
+				if (HitActor)
+				{
+					UGameplayStatics::ApplyRadialDamage(
+					this, 
+					100, 
+					ExplodeLocation, 
+					ExplosionRadius, 
+					UDamageType::StaticClass(), 
+					TArray<AActor*>(), 
+					this
+					);
+				}
 
 				UE_LOG(LogTemp, Log, TEXT("Target: %s, 위력 배율: %.2f"), *TargetComp->GetName(), PowerAlpha);
 			}
