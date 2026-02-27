@@ -261,9 +261,10 @@ void ASlingShot::LoadBird()
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("에러: BirdClass가 비어있거나 파우치가 없습니다!"));
         return;
     }
-
-    FVector SpawnLocation = Pouch->GetComponentLocation();
-    FRotator SpawnRotation = Pouch->GetComponentRotation();
+    
+    //   새 스폰할때 x축방향을 바라보게
+    FVector SpawnLocation = Pouch->GetComponentLocation();// 파우치 앞쪽으로 약간 떨어진 위치에 스폰
+    FRotator SpawnRotation = Pouch->GetComponentRotation(); // 파우치가 바라보는 방향의 반대쪽을 바라보도록 회전
 
     FActorSpawnParameters SpawnParams;
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -274,7 +275,7 @@ void ASlingShot::LoadBird()
     {
         GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("스폰 성공! 파우치에 부착합니다."));
         CurrentBird->AttachToComponent(Pouch, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("LaunchPouch"));
-        CurrentBird->SetActorRelativeRotation(FRotator(0.0f, 180.0f, 0.0f));
+        CurrentBird->SetActorRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
     }
 }
 
