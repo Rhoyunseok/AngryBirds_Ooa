@@ -5,7 +5,9 @@
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "SlingShot.h"
 #include "Components/SphereComponent.h" // 스피어 컴포넌트 추가
+
 
 ABase_Bird::ABase_Bird()
 {
@@ -213,6 +215,7 @@ void ABase_Bird::StartCameraReturn()
         TArray<AActor*> FoundActors;
         UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("MainCamera"), FoundActors);
         
+        
         if (FoundActors.Num() > 0)
         {
             // 2. 첫 번째로 찾은 카메라 액터로 화면을 부드럽게 돌립니다.
@@ -233,6 +236,21 @@ void ABase_Bird::StartCameraReturn()
 
 void ABase_Bird::DestroyBird()
 {
+    
+    // ★ [추가] 새가 파괴되기 직전에 새총에게 새로운 새를 장전하라고 명령합니다.
+    if (ReturnTarget)
+    {
+        // ReturnTarget이 ASlingShot 클래스인지 확인하고 형변환합니다.
+        ASlingShot* Slingshot = Cast<ASlingShot>(ReturnTarget);
+        if (Slingshot)
+        {
+            Slingshot->LoadBird(); // 새로운 새 스폰 및 파우치에 부착
+            
+            // (선택 사항) 만약 장전될 때 새총의 충돌을 다시 켜야 한다면 아래 주석을 해제하세요.
+            // Slingshot->SetActorEnableCollision(true); 
+        }
+    }
+    
     this->Destroy();
 }
 
