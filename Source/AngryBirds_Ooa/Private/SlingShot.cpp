@@ -297,7 +297,7 @@ void ASlingShot::FireBird()
     
     FVector PullVector = OriginLocation - CurrentPouchLoc;
 
-    float ForceMultiplier = 50.0f; 
+    float ForceMultiplier = 10.0f; 
     FVector LaunchVelocity = PullVector * ForceMultiplier;
 
     // [수정된 3번 로직] 팀원에게 힘 넘겨주기 + 카메라 전환
