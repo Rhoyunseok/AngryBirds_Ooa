@@ -43,14 +43,14 @@ void ABomb_Bird::Explode()
     GetWorldTimerManager().ClearTimer(BombTimerHandle);
     bAbilityUsed = true;
 
-    // ★ [핵심] 물리 엔진에 의해 따로 놀고 있는 Mesh의 실제 월드 위치를 가져옵니다.
+    // 물리 엔진에 의해 따로 놀고 있는 Mesh의 실제 월드 위치를 가져옵니다.
     FVector RealWorldLocation = BirdMesh->GetComponentLocation();
     
     // 디버그 로그로 실제 위치 확인
     UE_LOG(LogTemp, Error, TEXT("BombBird: Explode 호출됨! 실제 메쉬 위치: %s"), *RealWorldLocation.ToString());
 
     // 2. 액터의 루트를 메쉬가 있는 곳으로 강제 이동
-    // 이렇게 해야 DrawDebugSphere와 카메라 시스템이 정확한 위치를 잡습니다.
+    // DrawDebugSphere와 카메라 시스템이 정확한 위치를 잡음
     SetActorLocation(RealWorldLocation, false, nullptr, ETeleportType::TeleportPhysics);
 
     // 3. 물리 중단 및 외형 숨기기
@@ -62,7 +62,7 @@ void ABomb_Bird::Explode()
     BirdMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     BirdMesh->SetVisibility(false); 
 
-    // 4. 시각적 효과 (디버그 구체) - 이제 SetActorLocation을 했으므로 GetActorLocation()과 동일합니다.
+    // 4. 시각적 효과 (디버그 구체) - SetActorLocation을 했으므로 GetActorLocation()과 동일합니다.
     DrawDebugSphere(GetWorld(), RealWorldLocation, ExplosionRadius, 32, FColor::Red, false, 2.0f, 0, 2.0f);
 
     // 5. 주변 물리 객체 탐색 및 충격 적용
