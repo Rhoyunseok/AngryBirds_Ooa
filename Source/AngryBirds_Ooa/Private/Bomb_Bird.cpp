@@ -41,33 +41,34 @@ void ABomb_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 
 void ABomb_Bird::Explode()
 {
-    if (!BirdMesh) return;
-
-    // 혹시 남아있을지 모를 타이머 제거
+    // 중복 실행 방지
+    if (!BirdMesh || !bHasLaunched) return;
+    
+    // 이미 폭발 프로세스가 시작되었다면 무시 (TimerHandle 등으로 체크 가능)
     GetWorldTimerManager().ClearTimer(BombTimerHandle);
     bAbilityUsed = true;
 
-    // --- 카메라 고정 로직 추가 ---
-    // 폭발하는 순간 새의 움직임을 멈춰서 카메라가 더 이상 이동하지 않게 합니다.
+    // 1. 물리 및 이동 중단 (카메라 고정 효과)
     bUseCustomPhysics = false; 
     CustomVelocity = FVector::ZeroVector; 
     
     if (BirdMesh)
     {
-        BirdMesh->SetSimulatePhysics(false); // 물리 중단
+        BirdMesh->SetSimulatePhysics(false);
         BirdMesh->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
+        BirdMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); // 추가 충돌 방지
+        BirdMesh->SetVisibility(false); // 폭발했으므로 새의 모습은 감춤
     }
     
-    FVector ExplodeLocation = BirdMesh->GetComponentLocation(); 
+    FVector ExplodeLocation = GetActorLocation(); 
 
-    // 1. 시각적 효과 (디버그 구체)
+    // 2. 폭발 시각 효과 (디버그 구체)
     DrawDebugSphere(GetWorld(), ExplodeLocation, ExplosionRadius, 32, FColor::Red, false, 2.0f, 0, 2.0f);
 
-    // 2. 주변 물리 객체 탐색 및 충격 적용
+    // 3. 주변 물리 객체 탐색 및 충격 적용
     TArray<FHitResult> OutHits;
     FCollisionShape SphereShape = FCollisionShape::MakeSphere(ExplosionRadius);
 
-    // 주변의 물리 객체(ECC_PhysicsBody)를 모두 찾습니다.
     bool bHit = GetWorld()->SweepMultiByChannel(
         OutHits, 
         ExplodeLocation, 
@@ -84,11 +85,8 @@ void ABomb_Bird::Explode()
             UPrimitiveComponent* TargetComp = Hit.GetComponent();
             if (TargetComp && TargetComp->IsSimulatingPhysics())
             {
-                // 거리 기반 위력 계산
                 float Distance = FVector::Dist(ExplodeLocation, TargetComp->GetComponentLocation());
                 float DistanceRatio = FMath::Clamp(Distance / ExplosionRadius, 0.0f, 1.0f);
-                
-                // 중심에서 멀어질수록 힘이 약해짐 (최대 100% ~ 최소 70%)
                 float PowerAlpha = FMath::Lerp(1.0f, 0.7f, DistanceRatio);
 
                 TargetComp->AddRadialImpulse(
@@ -102,18 +100,10 @@ void ABomb_Bird::Explode()
         }
     }
 
-    // 3. 폭발 후 새의 처리
-    BirdMesh->SetVisibility(false); 
-    BirdMesh->SetSimulatePhysics(false); 
-    BirdMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); 
-
-    // 3초 뒤 액터 완전히 제거 (Base_Bird의 DespawnTimerHandle과는 별개로 즉시 처리)
-    FTimerHandle DestroyTimer;
-    GetWorldTimerManager().SetTimer(DestroyTimer, [this]()
-    {
-        if (IsValid(this))
-        {
-            this->Destroy();
-        }
-    }, 2.0f, false);
+    // --- [핵심 수정 부분] ---
+    // 4. 부모(Base_Bird)의 카메라 복귀 로직을 호출합니다.
+    // 폭발의 여운을 보여주기 위해 1초 정도 뒤에 카메라를 돌립니다.
+    GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABomb_Bird::StartCameraReturn, 1.0f, false);
+    
+    UE_LOG(LogTemp, Warning, TEXT("BombBird: 폭발 완료, 1초 후 카메라 복귀 시작"));
 }
