@@ -4,6 +4,7 @@
 #include "SlingShotController.h"
 #include "SlingShot.h" // 새총 헤더 포함
 #include "Kismet/GameplayStatics.h"
+// SetLockMouseToViewportBehavior
 
 ASlingShotController::ASlingShotController()
 {
@@ -15,7 +16,25 @@ ASlingShotController::ASlingShotController()
 void ASlingShotController::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	// 1. 입력 모드 설정
+	FInputModeGameAndUI InputMode;
+    
+	// 마우스를 화면에 가두지 않거나(DoNotLock), 항상 가두되 커서 이동은 허용하게 설정
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock); 
+    
+	// ★ 가장 중요: 클릭 시 커서가 사라지거나 캡처되는 것을 방지
+	InputMode.SetHideCursorDuringCapture(false);
+    
+	SetInputMode(InputMode);
 
+	// 2. 커서 가시성 강제 활성화
+	bShowMouseCursor = true;
+	bEnableClickEvents = true;   // 클릭 이벤트 허용
+	bEnableMouseOverEvents = true; // 마우스 오버 허용
+
+	UE_LOG(LogTemp, Warning, TEXT("New Level GameMode/Controller Initialized: %s"), *GetName());
+	
 	// 맵에 있는 새총 액터를 찾아서 CurrentSlingshot 변수에 저장합니다.
 	AActor* FoundActor = UGameplayStatics::GetActorOfClass(GetWorld(), ASlingShot::StaticClass());
 	if (FoundActor)
@@ -58,7 +77,7 @@ void ASlingShotController::AdjustPower(float AxisValue)
 		GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Cyan, TEXT("Mouse Wheel Moving!"));
 		// 휠을 굴릴 때마다 파워 증감 (민감도 조절 가능)
 		float NewPower = CurrentSlingshot->PullPower + (AxisValue * 30.0f);
-		CurrentSlingshot->PullPower = FMath::Clamp(NewPower, 0.0f, 700.0f);
+		CurrentSlingshot->PullPower = FMath::Clamp(NewPower, 0.0f, 500.0f);
 		// 로그를 띄워 실시간으로 수치가 변하는지 확인하세요.
 		GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Yellow, 
 			FString::Printf(TEXT("Current PullPower: %f"), CurrentSlingshot->PullPower));

@@ -283,7 +283,6 @@ void ASlingShot::FireBird()
 {
     if (!CurrentBird) return;
     
-    
     // 발사체(새)가 새총 몸체나 파우치에 걸리지 않도록 설정
     CurrentBird->SetActorEnableCollision(true); // 새의 충돌 활성화
     this->SetActorEnableCollision(false); // 새총의 충돌 비활성화
