@@ -3,6 +3,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
+#include "Camera/CameraShakeBase.h" // 카메라 쉐이크를 위해 추가
 
 ABomb_Bird::ABomb_Bird() : Super()
 {
@@ -30,7 +31,7 @@ void ABomb_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
         bAbilityUsed = true; 
         UE_LOG(LogTemp, Log, TEXT("BombBird: 충돌 확인, 1초 후 지연 폭발 예약"));
 
-        // 1초 뒤에 지연 폭발 실행 (이 1초 동안 새가 데굴데굴 구릅니다)
+        // 1초 동안 새가 굴러가는 시간을 벌어줍니다.
         GetWorldTimerManager().SetTimer(BombTimerHandle, this, &ABomb_Bird::Explode, 1.0f, false);
     }
 }
@@ -41,46 +42,49 @@ void ABomb_Bird::Explode()
     GetWorldTimerManager().ClearTimer(BombTimerHandle);
     bAbilityUsed = true;
 
-    // [중요] 물리 엔진에 의해 따로 놀고 있는 Mesh의 "현재 실제 월드 위치"를 먼저 가져옵니다.
+    // 현재 물리적으로 굴러가 있는 메쉬의 위치를 가져옵니다.
     FVector RealWorldLocation = BirdMesh->GetComponentLocation();
 
     // 1. 사운드 재생
     if (AbilityVoiceSound) 
     { 
-        // 사운드도 메쉬가 있는 위치에서 들리도록 재생
         UGameplayStatics::PlaySoundAtLocation(this, AbilityVoiceSound, RealWorldLocation);
     }
 
-    // 2. 능력 전용 폭발 파티클(Cascade) 스폰
+    // 2. 폭발 파티클 스폰
     if (ExplosionParticle)
     {
         UGameplayStatics::SpawnEmitterAtLocation(
             GetWorld(),
             ExplosionParticle,
-            RealWorldLocation, // [수정] GetActorLocation() 대신 메쉬가 굴러간 위치 사용!
+            RealWorldLocation, 
             FRotator::ZeroRotator,
             FVector(3.5f) 
         );
     }
 
-    // --- 폭발 물리 로직 ---
-    
-    // 3. 액터의 루트를 메쉬가 있는 곳으로 강제 이동 (카메라와 물리 충격 기준점을 맞춤)
-    SetActorLocation(RealWorldLocation, false, nullptr, ETeleportType::TeleportPhysics);
+    // 3. [수정] 카메라 흔들림 효과 적용
+    // 기존에 카메라를 워프시키던 SetActorLocation을 제거하고 이 로직을 넣습니다.
+    if (ExplosionCameraShake)
+    {
+        APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+        if (PC && PC->PlayerCameraManager)
+        {
+            // 1.0f는 강도 배율입니다. 2.0f 등으로 높이면 더 격렬해집니다.
+            PC->ClientStartCameraShake(ExplosionCameraShake, 100.0f);
+        }
+    }
 
-    bUseCustomPhysics = false; 
-    CustomVelocity = FVector::ZeroVector; 
-    
-    // 물리 중단 및 외형 숨기기
+    // 4. 물리 중단 및 외형 숨기기
+    // 액터 자체는 이동시키지 않으므로 카메라 시점은 급격히 변하지 않습니다.
     BirdMesh->SetSimulatePhysics(false);
     BirdMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     BirdMesh->SetVisibility(false); 
 
-    // 주변 물리 객체 탐색 및 충격 적용
+    // 5. 주변 물리 객체 탐색 및 충격 적용
     TArray<FHitResult> OutHits;
     FCollisionShape SphereShape = FCollisionShape::MakeSphere(ExplosionRadius);
 
-    // 실제 메쉬 위치(RealWorldLocation) 기준으로 폭발 범위 체크
     bool bHit = GetWorld()->SweepMultiByChannel(
         OutHits, 
         RealWorldLocation, 
@@ -116,9 +120,9 @@ void ABomb_Bird::Explode()
         }
     }
 
-    // 디버그 구체 표시 (위치 확인용)
+    // 디버그 구체 (테스트 후 주석 처리 가능)
     DrawDebugSphere(GetWorld(), RealWorldLocation, ExplosionRadius, 32, FColor::Red, false, 2.0f, 0, 1.5f);
 
-    // 1초 뒤에 카메라를 돌립니다.
-    GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABase_Bird::StartCameraReturn, 1.0f, false);
+    // 1초 뒤에 카메라를 원래 발사대로 돌립니다.
+    GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABase_Bird::StartCameraReturn, 0.5f, false);
 }

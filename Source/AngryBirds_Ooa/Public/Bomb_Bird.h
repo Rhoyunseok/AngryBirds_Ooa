@@ -40,5 +40,9 @@ private:
 	// 지연 폭발을 위한 타이머 핸들
 	FTimerHandle BombTimerHandle;
 	
+protected:
+	// 카메라 흔들림 효과를 저장할 클래스 변수
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	TSubclassOf<class UCameraShakeBase> ExplosionCameraShake;
 
 };
