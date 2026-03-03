@@ -8,7 +8,6 @@
 #include "SlingShot.h"
 #include "Components/SphereComponent.h" // 스피어 컴포넌트 추가
 
-
 ABase_Bird::ABase_Bird()
 {
     PrimaryActorTick.bCanEverTick = true;
@@ -79,6 +78,21 @@ void ABase_Bird::UseAbility()
     UE_LOG(LogTemp, Log, TEXT("Base Bird Ability Triggered"));
 }
 
+// 사운드 재생을 위한 공통 함수
+void ABase_Bird::PlayBirdSound(USoundBase* SoundToPlay)
+{
+    if (SoundToPlay)
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, SoundToPlay, GetActorLocation());
+    }
+}
+
+// 새총에서 당길 때 호출될 기합 소리 함수
+void ABase_Bird::PlayReadyVoice()
+{
+    PlayBirdSound(ReadyVoiceSound); // "으랴앗!" 기합
+}
+
 void ABase_Bird::LaunchByVector(FVector LaunchVelocity)
 {
     if (!BirdMesh) return;
@@ -97,7 +111,10 @@ void ABase_Bird::LaunchByVector(FVector LaunchVelocity)
     bHasLaunched = true;
     LaunchTime = GetWorld()->GetTimeSeconds();
 
-    UE_LOG(LogTemp, Warning, TEXT("커스텀 물리 발사 시작!"));
+    // 발사 보이스 재생 ("포잉~~~")
+    PlayBirdSound(FlyingVoiceSound);
+
+    UE_LOG(LogTemp, Warning, TEXT("커스텀 물리 발사 시작! 포잉~~~"));
 }
 
 void ABase_Bird::Tick(float DeltaTime)
@@ -108,6 +125,7 @@ void ABase_Bird::Tick(float DeltaTime)
     {
         HandleCustomPhysics(DeltaTime);
     }
+
     // 카메라 수평 유지 로직
     if (bHasLaunched && SpringArm)
     {
@@ -158,11 +176,17 @@ void ABase_Bird::HandleCustomPhysics(float DeltaTime)
         
         if (GetWorld()->GetTimeSeconds() - LaunchTime > 0.1f)
         {
+            // 충돌 신음 사운드 ("퍽!") 및 이펙트 재생
+            PlayBirdSound(PainVoiceSound);
+            if (HitParticle)
+            {
+                UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitParticle, HitResult.ImpactPoint);
+            }
+
             // 부딪힌 상대방이 물리 시뮬레이션 중이라면 힘을 가합니다.
             if (HitResult.GetComponent() && HitResult.GetComponent()->IsSimulatingPhysics())
             {
                 // 부딪힌 지점에 발사 속도 방향으로 충격(Impulse)을 줍니다.
-                // 100.0f는 무게(Mass)에 비례한 힘의 세기입니다. 
                 HitResult.GetComponent()->AddImpulseAtLocation(CustomVelocity * 100.0f, HitResult.ImpactPoint);
             }
             
@@ -214,7 +238,6 @@ void ABase_Bird::StartCameraReturn()
         TArray<AActor*> FoundActors;
         UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("MainCamera"), FoundActors);
         
-        
         if (FoundActors.Num() > 0)
         {
             // 2. 첫 번째로 찾은 카메라 액터로 화면을 부드럽게 돌립니다.
@@ -235,7 +258,6 @@ void ABase_Bird::StartCameraReturn()
 
 void ABase_Bird::DestroyBird()
 {
-    
     // 새가 파괴되기 직전에 새총에게 새로운 새를 장전하라고 명령합니다.
     if (ReturnTarget)
     {
@@ -244,9 +266,6 @@ void ABase_Bird::DestroyBird()
         if (Slingshot)
         {
             Slingshot->LoadBird(); // 새로운 새 스폰 및 파우치에 부착
-            
-            // 만약 장전될 때 새총의 충돌을 다시 켜야 한다면 아래 주석을 해제
-            // Slingshot->SetActorEnableCollision(true); 
         }
     }
     

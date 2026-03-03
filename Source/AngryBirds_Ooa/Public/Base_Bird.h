@@ -3,6 +3,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "Components/SphereComponent.h"
+#include "Sound/SoundBase.h"          // 사운드 추가
+#include "Particles/ParticleSystem.h" // 이펙트 추가
+#include "NiagaraFunctionLibrary.h"   // 나이아가라
 #include "Base_Bird.generated.h"
 
 UCLASS()
@@ -74,4 +77,26 @@ protected:
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     class USphereComponent* CollisionSphere;
+    
+protected:
+    // --- 새 고유 사운드 에셋 (에디터에서 할당) ---
+    UPROPERTY(EditAnywhere, Category = "Bird|Sound")
+    USoundBase* ReadyVoiceSound; // 1. 장전 시 (기 모으는 기합: "으랴앗!")
+
+    UPROPERTY(EditAnywhere, Category = "Bird|Sound")
+    USoundBase* FlyingVoiceSound; // 2. 발사 시 (날아가는 소리: "포잉~~~")
+
+    UPROPERTY(EditAnywhere, Category = "Bird|Sound")
+    USoundBase* PainVoiceSound;   // 3. 충돌 시 (신음 소리: "퍽! 아야!")
+
+    // --- 이펙트 에셋 (에디터에서 할당) ---
+    UPROPERTY(EditAnywhere, Category = "Bird|Effects")
+    UParticleSystem* HitParticle; // 충돌 시 파편 이펙트
+
+    // 사운드 재생 공통 함수
+    void PlayBirdSound(USoundBase* SoundToPlay);
+
+public:
+    // 새총에서 호출할 장전 사운드(기합) 재생용
+    void PlayReadyVoice();
 };
