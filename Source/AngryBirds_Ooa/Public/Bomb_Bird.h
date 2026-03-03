@@ -12,6 +12,10 @@ class ANGRYBIRDS_OOA_API ABomb_Bird : public ABase_Bird
 
 public:
 	ABomb_Bird();
+	
+	// --- [추가] 붐버드 전용 폭발 파티클 (Cascade 전용) ---
+	UPROPERTY(EditAnywhere, Category = "Bird|Effects")
+	class UParticleSystem* ExplosionParticle;
 
 	// 부모 클래스의 가상 함수 오버라이드
 	virtual void UseAbility() override;
@@ -35,4 +39,6 @@ protected:
 private:
 	// 지연 폭발을 위한 타이머 핸들
 	FTimerHandle BombTimerHandle;
+	
+
 };

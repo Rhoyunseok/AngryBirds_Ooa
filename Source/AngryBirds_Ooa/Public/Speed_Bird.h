@@ -21,4 +21,5 @@ protected:
 	// 대쉬 속도 (발사 속도보다 높게 설정)
 	UPROPERTY(EditAnywhere, Category = "Ability")
 	float DashPower;
+	
 };

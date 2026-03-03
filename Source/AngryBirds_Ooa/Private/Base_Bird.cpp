@@ -303,3 +303,19 @@ void ABase_Bird::Launch(FVector LaunchVelocity)
 {
     LaunchByVector(LaunchVelocity);
 }
+
+void ABase_Bird::PlayAbilityEffects()
+{
+    // 1. 사운드 재생
+    if (AbilityVoiceSound) PlayBirdSound(AbilityVoiceSound);
+
+    // 2. 이펙트 재생 (캐스케이드 우선 순위)
+    if (HitParticle) // 붐버드에서 P_Explosion_Smoke를 넣었을 때
+    {
+        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitParticle, GetActorLocation(), GetActorRotation(), FVector(3.0f));
+    }
+    else if (AbilityNiagaraEffect) // 스피드버드에서 대시 이펙트를 넣었을 때
+    {
+        UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), AbilityNiagaraEffect, GetActorLocation(), GetActorRotation());
+    }
+}

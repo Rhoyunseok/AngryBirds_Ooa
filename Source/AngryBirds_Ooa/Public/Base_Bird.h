@@ -107,7 +107,7 @@ protected:
 
     // 연기를 주기적으로 생성하기 위한 타이머
     FTimerHandle TrailTimerHandle;
-
+public:    
     // 연기를 실제로 스폰하는 함수
     void SpawnTrail();
     
@@ -115,4 +115,12 @@ protected:
     // [추가] 능력 사용 시 재생할 사운드 (공통)
     UPROPERTY(EditAnywhere, Category = "Bird|Sound")
     USoundBase* AbilityVoiceSound; 
+    
+    // [추가] 능력 사용 시 재생할 나이아가라 이펙트 (공통)
+    UPROPERTY(EditAnywhere, Category = "Bird|Effects")
+    class UNiagaraSystem* AbilityNiagaraEffect;
+
+    // [추가] 능력 사용 시 사운드와 이펙트를 동시에 처리하는 공통 함수
+    void PlayAbilityEffects();
+    
 };
