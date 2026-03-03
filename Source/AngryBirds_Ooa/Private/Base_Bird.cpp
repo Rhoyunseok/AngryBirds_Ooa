@@ -114,7 +114,7 @@ void ABase_Bird::LaunchByVector(FVector LaunchVelocity)
     LaunchTime = GetWorld()->GetTimeSeconds();
 
     // [추가] 경로 연기 타이머 시작 (0.1초마다 SpawnTrail 호출하여 봉봉봉봉 효과)
-    GetWorldTimerManager().SetTimer(TrailTimerHandle, this, &ABase_Bird::SpawnTrail, 0.2f, true);
+    GetWorldTimerManager().SetTimer(TrailTimerHandle, this, &ABase_Bird::SpawnTrail, 0.15f, true);
 
     // 발사 보이스 재생 ("포잉~~~")
     PlayBirdSound(FlyingVoiceSound);
