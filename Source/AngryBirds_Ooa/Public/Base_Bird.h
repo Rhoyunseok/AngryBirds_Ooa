@@ -99,4 +99,20 @@ protected:
 public:
     // 새총에서 호출할 장전 사운드(기합) 재생용
     void PlayReadyVoice();
+    
+protected:
+    // --- 이펙트 에셋 ---
+    UPROPERTY(EditAnywhere, Category = "Bird|Effects")
+    class UNiagaraSystem* FlyingTrailEffect; // 날아갈 때 뒤에 남는 연기 이펙트
+
+    // 연기를 주기적으로 생성하기 위한 타이머
+    FTimerHandle TrailTimerHandle;
+
+    // 연기를 실제로 스폰하는 함수
+    void SpawnTrail();
+    
+protected:
+    // [추가] 능력 사용 시 재생할 사운드 (공통)
+    UPROPERTY(EditAnywhere, Category = "Bird|Sound")
+    USoundBase* AbilityVoiceSound; 
 };

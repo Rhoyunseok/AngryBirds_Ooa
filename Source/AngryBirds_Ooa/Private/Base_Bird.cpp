@@ -7,6 +7,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "SlingShot.h"
 #include "Components/SphereComponent.h" // 스피어 컴포넌트 추가
+#include "NiagaraFunctionLibrary.h"   // 나이아가라 라이브러리 추가
+#include "NiagaraSystem.h"
 
 ABase_Bird::ABase_Bird()
 {
@@ -111,10 +113,32 @@ void ABase_Bird::LaunchByVector(FVector LaunchVelocity)
     bHasLaunched = true;
     LaunchTime = GetWorld()->GetTimeSeconds();
 
+    // [추가] 경로 연기 타이머 시작 (0.1초마다 SpawnTrail 호출하여 봉봉봉봉 효과)
+    GetWorldTimerManager().SetTimer(TrailTimerHandle, this, &ABase_Bird::SpawnTrail, 0.2f, true);
+
     // 발사 보이스 재생 ("포잉~~~")
     PlayBirdSound(FlyingVoiceSound);
 
     UE_LOG(LogTemp, Warning, TEXT("커스텀 물리 발사 시작! 포잉~~~"));
+}
+
+// [추가] 실제 경로 연기(나이아가라)를 스폰하는 함수
+void ABase_Bird::SpawnTrail()
+{
+    if (bHasLaunched && !bHasHitSomething && FlyingTrailEffect)
+    {
+        UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+            GetWorld(), 
+            FlyingTrailEffect, 
+            GetActorLocation(), 
+            GetActorRotation()
+        );
+    }
+    else
+    {
+        // 더 이상 필요 없으면 타이머 종료
+        GetWorldTimerManager().ClearTimer(TrailTimerHandle);
+    }
 }
 
 void ABase_Bird::Tick(float DeltaTime)
@@ -207,6 +231,9 @@ void ABase_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 {
     if (bHasHitSomething) return;
     bHasHitSomething = true;
+
+    // [추가] 충돌하면 경로 연기 생성을 중단합니다.
+    GetWorldTimerManager().ClearTimer(TrailTimerHandle);
 
     // 커스텀 물리 계산을 중단하고 엔진 물리를 활성화
     bUseCustomPhysics = false;

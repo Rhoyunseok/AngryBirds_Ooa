@@ -24,6 +24,7 @@ void ABomb_Bird::UseAbility()
 void ABomb_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
     // 부모 클래스의 OnBirdHit에서 물리 시뮬레이션이 켜집니다.
+    // [수정] Super를 호출함으로써 다중 충돌 사운드와 물리 전환 로직을 공통으로 처리합니다.
     Super::OnBirdHit(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
 
     if (!bAbilityUsed)
@@ -42,6 +43,12 @@ void ABomb_Bird::Explode()
     if (!BirdMesh) return;
     GetWorldTimerManager().ClearTimer(BombTimerHandle);
     bAbilityUsed = true;
+
+    // [추가] 폭발 사운드 재생 (AbilityVoiceSound 변수 활용)
+    if (AbilityVoiceSound)
+    {
+        PlayBirdSound(AbilityVoiceSound);
+    }
 
     // 물리 엔진에 의해 따로 놀고 있는 Mesh의 실제 월드 위치를 가져옵니다.
     FVector RealWorldLocation = BirdMesh->GetComponentLocation();
@@ -111,11 +118,10 @@ void ABomb_Bird::Explode()
                 this
                 );
             }
-            // 여기까지 코드 추가
         }
     }
 
     // 6. 카메라 복귀 호출 (Base_Bird의 로직 사용)
     // 1초 뒤에 카메라를 돌립니다.
-    GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABomb_Bird::StartCameraReturn, 1.0f, false);
+    GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABase_Bird::StartCameraReturn, 1.0f, false);
 }

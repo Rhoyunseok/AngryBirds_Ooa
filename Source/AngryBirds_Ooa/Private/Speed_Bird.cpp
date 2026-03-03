@@ -1,5 +1,6 @@
 #include "Speed_Bird.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Kismet/GameplayStatics.h" // 사운드 재생을 위해 필요
 
 ASpeed_Bird::ASpeed_Bird() : Super()
 {
@@ -11,6 +12,12 @@ void ASpeed_Bird::UseAbility()
 {
 	// 1. 이미 능력을 썼거나 부딪혔으면 무시
 	if (bAbilityUsed || bHasHitSomething || !bHasLaunched) return;
+
+	// [추가] 대시 사운드 재생 (에디터에서 가속 소리 할당)
+	if (AbilityVoiceSound)
+	{
+		PlayBirdSound(AbilityVoiceSound);
+	}
 
 	// 2. 현재 이동 방향(CustomVelocity)을 기준으로 가속
 	if (CustomVelocity.IsNearlyZero())
@@ -34,6 +41,7 @@ void ASpeed_Bird::UseAbility()
 void ASpeed_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	// 부모의 OnBirdHit를 호출하여 SimulatePhysics를 켜고 CustomVelocity를 전달함
+	// [수정] Super를 호출하여 다중 충돌 시 사운드(PainVoiceSound)가 매번 재생되게 합니다.
 	Super::OnBirdHit(HitComponent, OtherActor, OtherComp, NormalImpulse, Hit);
 
 	if (BirdMesh)
