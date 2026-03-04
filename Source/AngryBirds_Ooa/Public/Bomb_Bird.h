@@ -12,37 +12,42 @@ class ANGRYBIRDS_OOA_API ABomb_Bird : public ABase_Bird
 
 public:
 	ABomb_Bird();
-	
-	// --- [추가] 붐버드 전용 폭발 파티클 (Cascade 전용) ---
+    
+	// 폭발 파티클 (Cascade)
 	UPROPERTY(EditAnywhere, Category = "Bird|Effects")
 	class UParticleSystem* ExplosionParticle;
 
-	// 부모 클래스의 가상 함수 오버라이드
+	virtual void Tick(float DeltaTime) override;
 	virtual void UseAbility() override;
-
-	// 부모 클래스의 충돌 함수 오버라이드
 	virtual void OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
 
 protected:
-	// 폭발 반지름
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb Settings")
 	float ExplosionRadius;
 
-	// 폭발 위력
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bomb Settings")
 	float ExplosionStrength;
 
-	// 폭발을 실행하는 함수
-	UFUNCTION() 
-	void Explode();
+	// 지연 시간 (1.5 ~ 2.0초 권장)
+	UPROPERTY(EditAnywhere, Category = "Bomb Settings")
+	float FuseDuration = 1.75f;
 
-private:
-	// 지연 폭발을 위한 타이머 핸들
-	FTimerHandle BombTimerHandle;
-	
-protected:
-	// 카메라 흔들림 효과를 저장할 클래스 변수
+	// 카메라 흔들림
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	TSubclassOf<class UCameraShakeBase> ExplosionCameraShake;
 
+	UFUNCTION() 
+	void Explode();
+
+	// [추가] 공통 지연 로직 함수
+	void StartFuseSequence();
+
+private:
+	FTimerHandle BombTimerHandle;
+    
+	UPROPERTY()
+	class UMaterialInstanceDynamic* DynamicMat;
+
+	bool bIsIgnited = false;
+	float CurrentFuseTime = 0.0f;
 };
