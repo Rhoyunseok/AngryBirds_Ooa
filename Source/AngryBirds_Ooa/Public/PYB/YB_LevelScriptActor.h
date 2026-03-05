@@ -6,6 +6,8 @@
 #include "Engine/LevelScriptActor.h"
 #include "YB_LevelScriptActor.generated.h"
 
+// gamestate 에 돼지의 수를 전달하는 역할을 하는 레벨 스크립트 액터입니다.
+// BeginPlay에서 돼지의 수를 GameState에 전달하는 방식으로 구현할 예정입니다. (코드 위치는 YB_LevelScriptActor.cpp 참고)
 /**
  * 
  */
@@ -25,4 +27,5 @@ public:
 	
 	UFUNCTION()
 	void ShowLevelInfo();
+	
 };

@@ -32,7 +32,7 @@ void AAngryBirdGameState::SetTotalBirds(int32 Count)
 {
 	TotalBirds = Count;
 	RemainingBirds = Count;
-	OnBirdsChanged.Broadcast(RemainingBirds, TotalBirds);
+	OnBirdsChanged.Broadcast( , TotalBirds);
 }
 
 void AAngryBirdGameState::UseBird()
