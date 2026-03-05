@@ -19,6 +19,7 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* Score;
 	
+	
 
 	
 	void UpdateScore(int32 NewScore);

@@ -28,6 +28,7 @@ class ANGRYBIRDS_OOA_API UStagePlayingWidget : public UUserWidget
 {
 	GENERATED_BODY()
 	
+	
 protected:
 	// 하위 위젯 바인딩
 	UPROPERTY(meta = (BindWidget))
@@ -45,6 +46,10 @@ protected:
 	// 현재 스테이지 정보도 표시할 예정이라면 여기에 UPROPERTY로 선언하세요! (예: UTextBlock* WBP_StageInfoText;)
 	UPROPERTY(meta = (BindWidget))
 	class UStageInfoWidget* WBP_StageInfoWidget;
+	
+	// StageSelect 화면으로 전환 버튼
+	UPROPERTY(meta = (BindWidget))
+	class UButton* WBP_BackToStageSelectButton;
 	
 	// -- 생명 주기
 	virtual void NativeConstruct() override;
@@ -67,6 +72,10 @@ private:
 	
 	UFUNCTION()
 	void OnStageInfoChanged(FString NewStageInfo);
+	
+	// StageSelect 화면으로 돌아가는 버튼 클릭 이벤트 핸들러
+	UFUNCTION()
+	void OnBackToStageSelectClicked();
 	
 	
 };

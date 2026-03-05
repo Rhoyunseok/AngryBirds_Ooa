@@ -7,6 +7,9 @@
 #include "RHO/Widget/BirdWidget.h"
 #include "RHO/Widget/StarWidget.h"
 #include "RHO/Widget/StageInfoWidget.h"
+#include "Components/Button.h"
+// 맵 변경 버튼
+#include "Kismet/GameplayStatics.h"
 
 void UStagePlayingWidget::NativeConstruct()
 {
@@ -82,4 +85,11 @@ void UStagePlayingWidget::OnStageInfoChanged(FString NewStageInfo)
     {
         WBP_StageInfoWidget->UpdateStageInfo(NewStageInfo); // UStageInfoWidget 내부에 구현 필요
     }
+}
+
+void UStagePlayingWidget::OnBackToStageSelectClicked()
+{
+
+    UGameplayStatics::OpenLevel(this, FName("StageSelectMap")); // "StageSelectMap"은 실제 StageSelect 맵의 이름으로 변경해야 합니다.
+    
 }
