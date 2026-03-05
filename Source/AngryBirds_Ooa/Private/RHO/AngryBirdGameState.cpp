@@ -32,7 +32,7 @@ void AAngryBirdGameState::SetTotalBirds(int32 Count)
 {
 	TotalBirds = Count;
 	RemainingBirds = Count;
-	OnBirdsChanged.Broadcast( , TotalBirds);
+	OnBirdsChanged.Broadcast(RemainingBirds , TotalBirds);
 }
 
 void AAngryBirdGameState::UseBird()
@@ -47,5 +47,15 @@ void AAngryBirdGameState::UpdateStars(int32 NewStars)
 	{
 		CurrentStars = NewStars;
 		OnStarsChanged.Broadcast(CurrentStars);
+	}
+}
+
+void AAngryBirdGameState::SetStageInfo(const FString& NewStageInfo)
+{
+	// 스테이지 정보가 변경되었을 때만 업데이트 및 이벤트 브로드캐스트
+	if (CurrentStageInfo != NewStageInfo)
+	{
+		CurrentStageInfo = NewStageInfo;
+		OnStageInfoChanged.Broadcast(CurrentStageInfo);
 	}
 }

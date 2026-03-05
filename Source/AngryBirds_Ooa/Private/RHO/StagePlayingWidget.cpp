@@ -6,6 +6,7 @@
 #include "RHO/Widget/PigWidget.h"
 #include "RHO/Widget/BirdWidget.h"
 #include "RHO/Widget/StarWidget.h"
+#include "RHO/Widget/StageInfoWidget.h"
 
 void UStagePlayingWidget::NativeConstruct()
 {
@@ -19,6 +20,7 @@ void UStagePlayingWidget::NativeConstruct()
        GameState->OnPigsChanged.AddDynamic(this, &UStagePlayingWidget::OnPigsChanged);
        GameState->OnBirdsChanged.AddDynamic(this, &UStagePlayingWidget::OnBirdsChanged);
        GameState->OnStarsChanged.AddDynamic(this, &UStagePlayingWidget::OnStarsChanged);
+        GameState->OnStageInfoChanged.AddDynamic(this, &UStagePlayingWidget::OnStageInfoChanged);
        
        // 초기 UI 업데이트 (게임 시작 시점의 정보로 UI를 초기화)
        // GameState에 GetCurrentStars() 등의 Getter 함수가 선언되어 있다고 가정합니다.
@@ -70,5 +72,14 @@ void UStagePlayingWidget::OnStarsChanged(int32 Stars)
     if (WBP_StarWidget)
     {
         WBP_StarWidget->UpdateStars(Stars); // UStarWidget 내부에 구현 필요
+    }
+}
+
+void UStagePlayingWidget::OnStageInfoChanged(FString NewStageInfo)
+{
+    // Level Script Actor에서 전달받은 스테이지 정보를 UI에 표시하는 로직을 여기에 구현할 수 있습니다.
+    if (WBP_StageInfoWidget)
+    {
+        WBP_StageInfoWidget->UpdateStageInfo(NewStageInfo); // UStageInfoWidget 내부에 구현 필요
     }
 }

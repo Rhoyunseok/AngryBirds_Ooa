@@ -15,12 +15,14 @@ void AYB_LevelScriptActor::BeginPlay()
 	AAngryBirdGameState* GameState = Cast<AAngryBirdGameState>(UGameplayStatics::GetGameState(this));
 	if (GameState)
 	{
-		// 2. GameState의 함수를 호출해서 돼지 수를 전달합니다!
+		// 2. GameState의 함수를 호출해서 돼지 수를 전달합니다! // pi
 		GameState->SetTotalPigs(PigNum);
         
-		// (참고) 만약 새의 수도 전달하고 싶다면 똑같이 호출하면 됩니다.
+		// 여기서 사용할 수 있는 새의 수도 전달하고 싶다면 똑같이 호출하면 됩니다.
 		GameState->SetTotalBirds(5); 
 		
+		// Stage Info 
+		GameState->SetStageInfo(StageInfo);
 
 		UE_LOG(LogTemp, Warning, TEXT("GameState에 데이터 전달 성공! 돼지 수: %d"), PigNum);
 	}

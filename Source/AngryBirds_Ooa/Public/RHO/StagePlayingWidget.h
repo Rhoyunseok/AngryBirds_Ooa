@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/TextBlock.h"
+
 #include "StagePlayingWidget.generated.h"
 
 /**
@@ -40,6 +42,10 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	class UPigWidget* WBP_PigWidget;
 	
+	// 현재 스테이지 정보도 표시할 예정이라면 여기에 UPROPERTY로 선언하세요! (예: UTextBlock* WBP_StageInfoText;)
+	UPROPERTY(meta = (BindWidget))
+	class UStageInfoWidget* WBP_StageInfoWidget;
+	
 	// -- 생명 주기
 	virtual void NativeConstruct() override;
 private:
@@ -58,6 +64,9 @@ private:
     
 	UFUNCTION()
 	void OnStarsChanged(int32 Stars);
+	
+	UFUNCTION()
+	void OnStageInfoChanged(FString NewStageInfo);
 	
 	
 };

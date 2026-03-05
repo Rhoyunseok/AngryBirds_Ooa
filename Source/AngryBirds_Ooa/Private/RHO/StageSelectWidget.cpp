@@ -31,7 +31,7 @@ void UStageSelectWidget::OnBackToMainMenuClicked()
 
 void UStageSelectWidget::OnTutorialClicked()
 {
-	UGameplayStatics::OpenLevel(this, FName("Tutorial")); // 튜토리얼 맵 이름
+	UGameplayStatics::OpenLevel(this, FName("TestLevel")); // 튜토리얼 맵 이름
 }
 
 void UStageSelectWidget::OnStage1_1Clicked()

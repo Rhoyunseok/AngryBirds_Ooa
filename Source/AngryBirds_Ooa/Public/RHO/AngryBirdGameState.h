@@ -15,6 +15,7 @@
  * - 스테이지에 처음 배치된 총 돼지의 수 - 레벨에서 가져옴
  * - 현재 남아있는 돼지의 수 
  * - 현재 스테이지 이름 - 레벨에서 가져옴
+ * - 새를 사용하면 이 정보는 
  * 를 관리할 예정
  */
 
@@ -22,6 +23,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreChanged, int32, NewScore);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPigsChanged, int32, Remaining, int32, Total);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnBirdsChanged, int32, Remaining, int32, Total);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStarsChanged, int32, Stars);
+// 현재 스테이지 정보도 필요하다면 여기에 선언하세요! (예: FOnStageInfoChanged)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStageInfoChanged, FString, NewStageInfo);
 
 UCLASS()
 class ANGRYBIRDS_OOA_API AAngryBirdGameState : public AGameStateBase
@@ -39,6 +42,8 @@ public:
 	FOnBirdsChanged OnBirdsChanged;
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnStarsChanged OnStarsChanged;
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnStageInfoChanged OnStageInfoChanged;
 	
 	// -- 데이터 조회 함수 (Getter) 추가 --
 	UFUNCTION(BlueprintCallable, Category = "State")
@@ -53,6 +58,8 @@ public:
 	int32 GetTotalBirds() const { return TotalBirds; }
 	UFUNCTION(BlueprintCallable, Category = "State")
 	int32 GetCurrentStars() const { return CurrentStars; }
+	UFUNCTION(BlueprintCallable, Category = "State")
+	FString GetCurrentStageInfo() const { return CurrentStageInfo; }
 	
 	// -- 데이터 멤버 (State)
 	UPROPERTY(VisibleAnywhere, Category = "State")
@@ -67,6 +74,8 @@ public:
 	int32 RemainingBirds = 0;
 	UPROPERTY(VisibleAnywhere, Category = "State")
 	int32 CurrentStars = 0;
+	UPROPERTY(VisibleAnywhere, Category = "State")
+	FString CurrentStageInfo;
 	
 	// -- 데이터 수정 함수 (Setter) --
 	void AddScore(int32 Amount);
@@ -75,4 +84,5 @@ public:
 	void SetTotalBirds(int32 Count);
 	void UseBird();
 	void UpdateStars(int32 NewStars);
+	void SetStageInfo(const FString& NewStageInfo);
 };

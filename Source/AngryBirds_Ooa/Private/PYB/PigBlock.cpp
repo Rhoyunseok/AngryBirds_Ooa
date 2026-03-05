@@ -2,39 +2,34 @@
 
 
 #include "PYB/PigBlock.h"
-#include "PYB/YB_LevelScriptActor.h"
+#include "RHO/AngryBirdGameState.h"
+#include "Kismet/GameplayStatics.h"
 
 
 void APigBlock::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// 레벨 스크립트 직접 가져와서 PigNum 계산
-	UWorld* CurrentStage = GetWorld();
-	if (CurrentStage)
-	{
-		AYB_LevelScriptActor* LSA = Cast<AYB_LevelScriptActor>(CurrentStage->GetLevelScriptActor());
-		if (LSA)
-		{
-			LSA->PigNum++;
-			LSA->ShowLevelInfo();
-		}
-	}
 }
 
 void APigBlock::BeforeBlockDestory()
 {
 	Super::BeforeBlockDestory();
 	UE_LOG(LogTemp, Warning, TEXT("PigDie"));
-	// GameState 에 돼지 수 감소 이벤트 보내기
-	UWorld* CurrentStage = GetWorld();
-	if (CurrentStage)
+    
+	// 1. 현재 월드의 GameState를 가져와서 우리가 만든 AAngryBirdGameState로 캐스팅
+	AAngryBirdGameState* GameState = Cast<AAngryBirdGameState>(UGameplayStatics::GetGameState(this));
+    
+	// 2. 캐스팅에 성공했다면?
+	if (GameState)
 	{
-		AYB_LevelScriptActor* LSA = Cast<AYB_LevelScriptActor>(CurrentStage->GetLevelScriptActor());
-		if (LSA)		{
-			LSA->PigNum--;
-			LSA->ShowLevelInfo();
-		}
+		// 3. GameState에게 돼지가 죽었다고 알림 (여기서 UI 변경 방송이 자동으로 나갑니다!)
+		GameState->DecreasePigCount();
+        
+		// (선택) 점수도 올리고 싶다면 여기서 호출하세요!
+		// GameState->AddScore(500); 
 	}
+
+	// 돼지 자체의 델리게이트 실행 (이펙트나 사운드 재생용으로 쓰기 좋습니다)
 	OnPigDestroyed.Broadcast();
 }
