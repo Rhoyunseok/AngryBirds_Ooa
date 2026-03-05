@@ -49,9 +49,9 @@ public:
 	float BlockPrice = 100;
 	
 	UPROPERTY(EditAnywhere, Category=BlockState)
-	float BirdThreshold = 100.0f;
+	float BirdThreshold = 150.0f;
 	UPROPERTY(EditAnywhere, Category=BlockState)
-	float BlockThreshold = 200.0f;
+	float BlockThreshold = 300.0f;
 	
 	UPROPERTY()
 	class UMaterialInstanceDynamic* DynamicMaterial;
