@@ -37,6 +37,8 @@ void ABaseBlock::BeginPlay()
 	if (BaseMaterial)
 	{
 		DynamicMaterial = bodyMeshComp->CreateDynamicMaterialInstance(0, BaseMaterial);
+		bodyMeshComp->SetMaterial(0, DynamicMaterial);
+		UE_LOG(LogTemp, Warning, TEXT("Successfully Created: %s"), *DynamicMaterial->GetName());
 	}
 }
 
@@ -62,10 +64,13 @@ float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& Dama
 
 	if (BlockHP > 0.0f)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("덜아픔"));
+		UE_LOG(LogTemp, Warning, TEXT("다침"));
 		if (DynamicMaterial)
 		{
-			DynamicMaterial->SetScalarParameterValue(FName("DamageAlpha"), 0.5);
+			DynamicMaterial->SetScalarParameterValue(FName("CrackAmount"), 0.8);
+			float temp = 0.0f;
+			DynamicMaterial->GetScalarParameterValue(FName("CrackAmount"), temp);
+			UE_LOG(LogTemp, Warning, TEXT("BlockHP: %f, DynamicMat: %s"), temp, *DynamicMaterial->GetName());
 		}
 		DamageState = 1;
 	}
@@ -109,7 +114,7 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	
 	float ImpactSpeed = FMath::Abs(OtherSpeed - this->GetVelocity().Size());
 	
-	UE_LOG(LogTemp, Warning, TEXT("ImpulseSize: %f, SelectedThreshold: %f"), ImpactSpeed, SelectedThreshold);
+	// UE_LOG(LogTemp, Warning, TEXT("ImpulseSize: %f, SelectedThreshold: %f"), ImpactSpeed, SelectedThreshold);
 	
 	if (ImpactSpeed > SelectedThreshold)
 	{
@@ -123,5 +128,5 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 void ABaseBlock::BeforeBlockDestory()
 {
 	OnScoreChanged.Broadcast(BlockPrice);
-	UE_LOG(LogTemp, Warning, TEXT("아악 %s"), *GetName());
+	UE_LOG(LogTemp, Warning, TEXT("파괴 %s"), *GetName());
 }
