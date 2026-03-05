@@ -13,11 +13,8 @@ ABaseBlock::ABaseBlock()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	
-	SceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
-	RootComponent = SceneComp;
-	
 	bodyMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BodyMeshComponent"));
-	bodyMeshComp->SetupAttachment(SceneComp);
+	RootComponent = bodyMeshComp;
 	bodyMeshComp->SetCollisionProfileName(TEXT("BlockAll"));
 	bodyMeshComp->SetNotifyRigidBodyCollision(true);
 	bodyMeshComp->SetSimulatePhysics(true);
@@ -61,9 +58,11 @@ float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& Dama
 
 	// 블록의 HP 깎기
 	BlockHP -= ActualDamage;
+	UE_LOG(LogTemp, Warning, TEXT("BlockHP: %f, ActualDamage: %f"), BlockHP, ActualDamage);
 
 	if (BlockHP > 0.0f)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("덜아픔"));
 		if (DynamicMaterial)
 		{
 			DynamicMaterial->SetScalarParameterValue(FName("DamageAlpha"), 0.5);
@@ -74,7 +73,7 @@ float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& Dama
 	{
 		DamageState = 2;
 		BeforeBlockDestory();
-		Destroy();
+		this->Destroy();
 	}
 	
 	return ActualDamage;
@@ -88,29 +87,33 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	FVector HitNormal = Hit.ImpactNormal;
 	FVector UpVector = FVector(0.f, 0.f, 1.0f);
 	float AbsDot = FMath::Abs(FVector::DotProduct(HitNormal, UpVector));
-    if (AbsDot > 0.95f) return;
+	if (AbsDot > 0.95f) return;
 	
 	float SelectedThreshold = BlockThreshold;
+	float OtherSpeed = OtherActor->GetVelocity().Size();
+	
+	if (HitComponent->IsSimulatingPhysics())
+	{
+		ABase_Bird* Bird = Cast<ABase_Bird>(OtherActor);
+		if (Bird)
+		{
+			OtherSpeed= Bird->CustomVelocity.Size();
+			UE_LOG(LogTemp, Log, TEXT("새 속도: %f"), OtherSpeed);
+		}
+	}
 	
 	if (OtherActor->IsA(ABase_Bird::StaticClass()))
 	{
 		SelectedThreshold = BirdThreshold;
 	}
 	
-	// 1. 충격량(Impulse)의 크기를 가져옵니다.
-	// NormalImpulse는 물리 엔진이 계산한 '충돌 힘'입니다.
-	float ImpulseSize = NormalImpulse.Size();
+	float ImpactSpeed = FMath::Abs(OtherSpeed - this->GetVelocity().Size());
 	
-	// 2. 데미지로 인정할 최소 충격량 설정 (Threshold)
-	// 이 값보다 작으면 그냥 바닥에 닿아 있거나 살짝 굴러가는 상태로 간주합니다.
-	float BlockMass = bodyMeshComp->GetMass();
-	float DynamicThreshold = (FMath::Loge(BlockMass + 1.0f) * SelectedThreshold) + DefaultThreshold;
+	UE_LOG(LogTemp, Warning, TEXT("ImpulseSize: %f, SelectedThreshold: %f"), ImpactSpeed, SelectedThreshold);
 	
-	UE_LOG(LogTemp, Warning, TEXT("ImpulseSize: %f, DynamicThreshold: %f"), ImpulseSize, DynamicThreshold);
-	
-	if (ImpulseSize > DynamicThreshold)
+	if (ImpactSpeed > SelectedThreshold)
 	{
-		float CalculatedDamage = (ImpulseSize - DynamicThreshold) / (BlockMass * 0.1f);
+		float CalculatedDamage = (ImpactSpeed - SelectedThreshold) / 10;
 
 		// 나 자신에게 데미지를 입힘 (내가 부딪혀서 아픔)
 		UGameplayStatics::ApplyDamage(this, CalculatedDamage, nullptr, OtherActor, UDamageType::StaticClass());
@@ -120,5 +123,5 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 void ABaseBlock::BeforeBlockDestory()
 {
 	OnScoreChanged.Broadcast(BlockPrice);
-	UE_LOG(LogTemp, Warning, TEXT("BlockDie"));
+	UE_LOG(LogTemp, Warning, TEXT("아악 %s"), *GetName());
 }

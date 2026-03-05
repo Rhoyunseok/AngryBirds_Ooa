@@ -2,13 +2,14 @@
 
 
 #include "PYB/PigBlock.h"
-
 #include "PYB/YB_LevelScriptActor.h"
 
 
 void APigBlock::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	// 레벨 스크립트 직접 가져와서 PigNum 계산
 	UWorld* CurrentStage = GetWorld();
 	if (CurrentStage)
 	{
