@@ -6,6 +6,7 @@
 #include "Base_Bird.h"
 #include "Kismet/GameplayStatics.h"
 
+
 // Sets default values
 ABaseBlock::ABaseBlock()
 {
@@ -72,7 +73,8 @@ float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& Dama
 	else
 	{
 		DamageState = 2;
-		DestroyBlock();
+		BeforeBlockDestory();
+		Destroy();
 	}
 	
 	return ActualDamage;
@@ -115,7 +117,8 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	}
 }
 
-void ABaseBlock::DestroyBlock()
+void ABaseBlock::BeforeBlockDestory()
 {
-	SetLifeSpan(0.01f);
+	OnScoreChanged.Broadcast(BlockPrice);
+	UE_LOG(LogTemp, Warning, TEXT("BlockDie"));
 }

@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "BaseBlock.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnScoreChangedSignature, float);
+
 UCLASS()
 class ANGRYBIRDS_OOA_API ABaseBlock : public AActor
 {
@@ -36,22 +38,20 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	class USceneComponent* SceneComp;
-	
 	UPROPERTY(VisibleAnywhere, Category=BodyMesh)
 	class UStaticMeshComponent* bodyMeshComp;
 	
 	UPROPERTY(EditAnywhere, Category=BlockState)
 	float BlockMaxHP = 100;
-	
 	UPROPERTY(EditAnywhere, Category=BlockState)
 	float BlockHP = 100;
+	UPROPERTY(EditAnywhere, Category=BlockState)
+	float BlockPrice = 100;
 	
 	UPROPERTY(EditAnywhere, Category=BlockState)
 	float BirdThreshold = 150.0f;
-
 	UPROPERTY(EditAnywhere, Category=BlockState)
 	float BlockThreshold = 300.0f;
-	
 	UPROPERTY(EditAnywhere, Category=BlockState)
 	float DefaultThreshold = 100.0f;
 	
@@ -61,5 +61,7 @@ public:
 	// 블록 데미지 단계: 0 - 정상, 1 - 깨짐, 2 - 파괴
 	int DamageState = 0;
 	
-	void DestroyBlock();
+	virtual void BeforeBlockDestory();
+	
+	FOnScoreChangedSignature OnScoreChanged;
 };
