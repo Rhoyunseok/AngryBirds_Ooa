@@ -453,10 +453,10 @@ void ASlingShot::DrawTrajectory()
         // 점 크기 조절 (0.5도 너무 크면 0.2f 정도로 줄이세요)
         PointTransform.SetScale3D(FVector(0.3f)); 
         
-        
         TrajectoryISMC->AddInstanceWorldSpace(PointTransform); 
     }
 }
+
 void ASlingShot::ClearTrajectory()
 {
     if (TrajectoryISMC)

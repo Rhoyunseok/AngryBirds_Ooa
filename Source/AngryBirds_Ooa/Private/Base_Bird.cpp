@@ -81,7 +81,6 @@ void ABase_Bird::UseAbility()
     UE_LOG(LogTemp, Log, TEXT("Base Bird Ability Triggered"));
 }
 
-// 사운드 재생을 위한 공통 함수
 void ABase_Bird::PlayBirdSound(USoundBase* SoundToPlay)
 {
     if (SoundToPlay)
@@ -90,7 +89,6 @@ void ABase_Bird::PlayBirdSound(USoundBase* SoundToPlay)
     }
 }
 
-// 새총에서 당길 때 호출될 기합 소리 함수
 void ABase_Bird::PlayReadyVoice()
 {
     PlayBirdSound(ReadyVoiceSound); // "으랴앗!" 기합
@@ -123,7 +121,6 @@ void ABase_Bird::LaunchByVector(FVector LaunchVelocity)
     UE_LOG(LogTemp, Warning, TEXT("커스텀 물리 발사 시작! 포잉~~~"));
 }
 
-// [추가] 실제 경로 연기(나이아가라)를 스폰하는 함수
 void ABase_Bird::SpawnTrail()
 {
     if (bHasLaunched && !bHasHitSomething && FlyingTrailEffect)

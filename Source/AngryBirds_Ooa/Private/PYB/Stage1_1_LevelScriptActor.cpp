@@ -6,6 +6,7 @@
 #include "SlingShot.h"
 #include "Kismet/GameplayStatics.h"
 #include "RHO/AngryBirdGameState.h"
+#include "Blueprint/UserWidget.h"
 
 void AStage1_1_LevelScriptActor::BeginPlay()
 {
@@ -28,6 +29,8 @@ void AStage1_1_LevelScriptActor::BeginPlay()
 		
 		// 새 
 		GameState->SetBirdQueue(LevelBirds);
+		// OnGameSuccess 바인딩 현재 빨간줄인 이유는 
+		
 		
 		AActor* FoundSlingshot = UGameplayStatics::GetActorOfClass(GetWorld(), ASlingShot::StaticClass());
 		if (ASlingShot* Slingshot = Cast<ASlingShot>(FoundSlingshot))
@@ -47,3 +50,5 @@ void AStage1_1_LevelScriptActor::ShowLevelInfo()
 {
 	UE_LOG(LogTemp, Warning, TEXT("PigNum: %d, StageInfo: %s"), PigNum, *StageInfo);
 }
+
+

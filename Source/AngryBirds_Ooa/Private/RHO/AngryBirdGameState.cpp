@@ -130,7 +130,8 @@ void AAngryBirdGameState::CheckMatchState()
 
 		OnGameCleared.Broadcast(); // UI에게 승리창 띄우라고 방송
 	}
-	// 조건 2: 패배 (기존과 동일)
+	
+	// 2
 	else if (RemainingPigs > 0 && RemainingBirds <= 0)
 	{
 		TArray<AActor*> FoundBirds;

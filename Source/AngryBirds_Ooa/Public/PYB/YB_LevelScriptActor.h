@@ -30,7 +30,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Settings")
 	TArray<TSubclassOf<class AActor>> LevelBirds;
 	
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI Settings")
+	TSubclassOf<class UUserWidget> SuccessWidgetClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI Settings")
+	TSubclassOf<class UUserWidget> FailWidgetClass;
+	
+	
 	UFUNCTION()
 	void ShowLevelInfo();
-	
+	UFUNCTION()
+	void OnGameSuccess();
+
+	UFUNCTION()
+	void OnGameFail();
 };
