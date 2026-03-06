@@ -22,6 +22,7 @@ public:
 	
 private:
 	void NativeConstruct() override;
+	
 	UFUNCTION()
 	void OnBackToStageSelectClicked();
 	
