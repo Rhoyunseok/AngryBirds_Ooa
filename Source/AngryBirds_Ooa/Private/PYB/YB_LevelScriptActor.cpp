@@ -8,7 +8,7 @@
 void AYB_LevelScriptActor::BeginPlay()
 {
 	Super::BeginPlay();
-	PigNum = 2;
+	PigNum = 4;
 	StageInfo = "Tutorial Map";
 	// GameState 전송하기
 	

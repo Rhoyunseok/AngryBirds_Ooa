@@ -5,6 +5,7 @@
 
 #include "Base_Bird.h"
 #include "Kismet/GameplayStatics.h"
+#include "RHO/AngryBirdGameState.h"
 
 
 // Sets default values
@@ -103,7 +104,7 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 		if (Bird)
 		{
 			OtherSpeed= Bird->CustomVelocity.Size();
-			UE_LOG(LogTemp, Log, TEXT("새 속도: %f"), OtherSpeed);
+			// UE_LOG(LogTemp, Log, TEXT("새 속도: %f"), OtherSpeed);
 		}
 	}
 	
@@ -128,6 +129,14 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 
 void ABaseBlock::BeforeBlockDestory()
 {
+	AAngryBirdGameState* GameState = Cast<AAngryBirdGameState>(UGameplayStatics::GetGameState(this));
+    
+	// 2. 캐스팅에 성공했다면?
+	if (GameState)
+	{
+		GameState->AddScore(BlockPrice);
+	}
+	
 	OnScoreChanged.Broadcast(BlockPrice);
 	UE_LOG(LogTemp, Warning, TEXT("파괴 %s"), *GetName());
 }

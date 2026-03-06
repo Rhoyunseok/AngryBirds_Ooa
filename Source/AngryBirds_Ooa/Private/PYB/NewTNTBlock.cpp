@@ -5,6 +5,11 @@
 #include "Kismet/GameplayStatics.h"
 
 
+ANewTNTBlock::ANewTNTBlock()
+{
+	BlockPrice = 300.0f;
+}
+
 void ANewTNTBlock::BeginPlay()
 {
 	Super::BeginPlay();
@@ -12,7 +17,7 @@ void ANewTNTBlock::BeginPlay()
 
 void ANewTNTBlock::BeforeBlockDestory()
 {
-	UE_LOG(LogTemp, Warning, TEXT("펑"));
+	UE_LOG(LogTemp, Warning, TEXT("TNT 펑"));
 	Explode();
 }
 

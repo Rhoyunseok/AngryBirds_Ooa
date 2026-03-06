@@ -9,6 +9,7 @@
 APigBlock::APigBlock()
 {
 	BirdThreshold = 10.0f;
+	BlockPrice = 1000.0f;
 }
 
 void APigBlock::BeginPlay()

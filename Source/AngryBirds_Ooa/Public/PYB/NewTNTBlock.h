@@ -14,6 +14,9 @@ class ANGRYBIRDS_OOA_API ANewTNTBlock : public ABaseBlock
 {
 	GENERATED_BODY()
 	
+public:
+	ANewTNTBlock();
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void BeforeBlockDestory() override;
