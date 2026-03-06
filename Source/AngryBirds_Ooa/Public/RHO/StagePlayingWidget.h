@@ -49,7 +49,7 @@ protected:
 	
 	// StageSelect 화면으로 전환 버튼
 	UPROPERTY(meta = (BindWidget))
-	class UButton* WBP_BackToStageSelectButton;
+	class UBackToStageSelectButton* WBP_BackToStageSelectButton;
 	
 	// -- 생명 주기
 	virtual void NativeConstruct() override;
