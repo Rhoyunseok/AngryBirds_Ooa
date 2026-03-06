@@ -49,7 +49,7 @@ public:
 	float BlockPrice = 100;
 	
 	UPROPERTY(EditAnywhere, Category=BlockState)
-	float BirdThreshold = 150.0f;
+	float BirdThreshold = 100.0f;
 	UPROPERTY(EditAnywhere, Category=BlockState)
 	float BlockThreshold = 300.0f;
 	
