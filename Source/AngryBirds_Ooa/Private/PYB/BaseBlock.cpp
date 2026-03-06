@@ -5,6 +5,7 @@
 
 #include "Base_Bird.h"
 #include "Kismet/GameplayStatics.h"
+#include "RHO/AngryBirdGameState.h"
 
 
 // Sets default values
@@ -38,7 +39,7 @@ void ABaseBlock::BeginPlay()
 	{
 		DynamicMaterial = bodyMeshComp->CreateDynamicMaterialInstance(0, BaseMaterial);
 		bodyMeshComp->SetMaterial(0, DynamicMaterial);
-		UE_LOG(LogTemp, Warning, TEXT("Successfully Created: %s"), *DynamicMaterial->GetName());
+		// UE_LOG(LogTemp, Warning, TEXT("Successfully Created: %s"), *DynamicMaterial->GetName());
 	}
 }
 
@@ -68,9 +69,9 @@ float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& Dama
 		if (DynamicMaterial)
 		{
 			DynamicMaterial->SetScalarParameterValue(FName("CrackAmount"), 0.8);
-			float temp = 0.0f;
-			DynamicMaterial->GetScalarParameterValue(FName("CrackAmount"), temp);
-			UE_LOG(LogTemp, Warning, TEXT("BlockHP: %f, DynamicMat: %s"), temp, *DynamicMaterial->GetName());
+			// float temp = 0.0f;
+			// DynamicMaterial->GetScalarParameterValue(FName("CrackAmount"), temp);
+			// UE_LOG(LogTemp, Warning, TEXT("BlockHP: %f, DynamicMat: %s"), temp, *DynamicMaterial->GetName());
 		}
 		DamageState = 1;
 	}
@@ -103,13 +104,14 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 		if (Bird)
 		{
 			OtherSpeed= Bird->CustomVelocity.Size();
-			UE_LOG(LogTemp, Log, TEXT("새 속도: %f"), OtherSpeed);
+			// UE_LOG(LogTemp, Log, TEXT("새 속도: %f"), OtherSpeed);
 		}
 	}
 	
 	if (OtherActor->IsA(ABase_Bird::StaticClass()))
 	{
 		SelectedThreshold = BirdThreshold;
+		UE_LOG(LogTemp, Log, TEXT("새..."));
 	}
 	
 	float ImpactSpeed = FMath::Abs(OtherSpeed - this->GetVelocity().Size());
@@ -118,7 +120,7 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	
 	if (ImpactSpeed > SelectedThreshold)
 	{
-		float CalculatedDamage = (ImpactSpeed - SelectedThreshold) / 10;
+		float CalculatedDamage = 50 + (ImpactSpeed - SelectedThreshold) / 10;
 
 		// 나 자신에게 데미지를 입힘 (내가 부딪혀서 아픔)
 		UGameplayStatics::ApplyDamage(this, CalculatedDamage, nullptr, OtherActor, UDamageType::StaticClass());
@@ -127,6 +129,14 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 
 void ABaseBlock::BeforeBlockDestory()
 {
+	AAngryBirdGameState* GameState = Cast<AAngryBirdGameState>(UGameplayStatics::GetGameState(this));
+    
+	// 2. 캐스팅에 성공했다면?
+	if (GameState)
+	{
+		GameState->AddScore(BlockPrice);
+	}
+	
 	OnScoreChanged.Broadcast(BlockPrice);
 	UE_LOG(LogTemp, Warning, TEXT("파괴 %s"), *GetName());
 }

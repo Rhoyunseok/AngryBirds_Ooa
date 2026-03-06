@@ -39,6 +39,7 @@ void ASlingShotController::SetupInputComponent()
 	// "MouseWheel" 축은 마우스 휠에 바인딩되어 있다고 가정합니다. (프로젝트 세팅에서 설정 필요)
 	if (InputComponent)
 	{
+		// 클릭을 했을때 ui 상호작용이 가능하도록 bConsumeInput = false로 설정하여 입력이 UI에도 전달되도록 합니다.
 		InputComponent->BindAction("Fire", IE_Pressed, this, &ASlingShotController::StartAiming).bConsumeInput = false;
 		InputComponent->BindAction("Fire", IE_Released, this, &ASlingShotController::StopAiming).bConsumeInput = false;
 		InputComponent->BindAxis("MouseWheel", this, &ASlingShotController::AdjustPower);

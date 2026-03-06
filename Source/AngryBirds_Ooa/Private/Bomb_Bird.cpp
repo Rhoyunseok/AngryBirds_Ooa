@@ -166,7 +166,9 @@ void ABomb_Bird::Explode()
                 TargetComp->AddRadialImpulse(RealWorldLocation, ExplosionRadius, ExplosionStrength, ERadialImpulseFalloff::RIF_Constant, true);
             }
             
-            UGameplayStatics::ApplyRadialDamage(this, 100.0f, RealWorldLocation, ExplosionRadius, UDamageType::StaticClass(), TArray<AActor*>(), this);
+            // 블럭에 데미지 부여
+            AActor* HitActor = Hit.GetActor();
+            UGameplayStatics::ApplyDamage(HitActor,1000.0f, GetInstigatorController(), this, UDamageType::StaticClass());
         }
     }
 
