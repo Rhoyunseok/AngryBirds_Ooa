@@ -86,8 +86,8 @@ public:
 	
 	//발사체 관련 >_<
 	// 블루프린트에서 어떤 새(액터)를 스폰할지 지정하는 클래스 변수
-	UPROPERTY(EditAnywhere, Category = "Slingshot | Projectile")
-	TSubclassOf<AActor> BirdClass;
+//	UPROPERTY(EditAnywhere, Category = "Slingshot | Projectile")
+	// TSubclassOf<AActor> BirdClass;
 
 	// 장전 함수
 	UFUNCTION(BlueprintCallable, Category = "Slingshot")

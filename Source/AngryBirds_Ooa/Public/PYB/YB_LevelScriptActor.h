@@ -22,8 +22,13 @@ protected:
 public:
 	UPROPERTY(BlueprintReadWrite)
 	int32 PigNum;
+	
 	UPROPERTY(EditAnywhere)
 	FString StageInfo;
+	
+	//새
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Settings")
+	TArray<TSubclassOf<class AActor>> LevelBirds;
 	
 	UFUNCTION()
 	void ShowLevelInfo();

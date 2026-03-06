@@ -4,6 +4,7 @@
 #include "PYB/YB_LevelScriptActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "RHO/AngryBirdGameState.h"
+#include "SlingShot.h"
 // 돼지의 수를 GameState 에 전송
 void AYB_LevelScriptActor::BeginPlay()
 {
@@ -23,6 +24,15 @@ void AYB_LevelScriptActor::BeginPlay()
 		
 		// Stage Info 
 		GameState->SetStageInfo(StageInfo);
+		
+		// 새 
+		GameState->SetBirdQueue(LevelBirds);
+		
+		AActor* FoundSlingshot = UGameplayStatics::GetActorOfClass(GetWorld(), ASlingShot::StaticClass());
+		if (ASlingShot* Slingshot = Cast<ASlingShot>(FoundSlingshot))
+		{
+			Slingshot->LoadBird(); // "새총아! 내가 새 채워놨으니까 이제 장전해!"
+		}
 
 		UE_LOG(LogTemp, Warning, TEXT("GameState에 데이터 전달 성공! 돼지 수: %d"), PigNum);
 	}

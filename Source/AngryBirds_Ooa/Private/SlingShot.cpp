@@ -4,6 +4,7 @@
 #include "Math/Plane.h" 
 #include "Engine/World.h"
 #include "Base_Bird.h"
+#include "Rho/AngryBirdGameState.h"
 
 ASlingShot::ASlingShot()
 {
@@ -34,7 +35,7 @@ ASlingShot::ASlingShot()
 void ASlingShot::BeginPlay()
 {
     Super::BeginPlay();
-    LoadBird();
+    
     if (Pouch) 
     {
        DefaultPouchLocation = Pouch->GetRelativeLocation(); 
@@ -256,10 +257,24 @@ void ASlingShot::UpdateBands()
 
 void ASlingShot::LoadBird()
 {
-    if (!BirdClass || !Pouch) 
+    if (!Pouch) 
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("에러: BirdClass가 비어있거나 파우치가 없습니다!"));
         return;
+    }
+    // GameState 가져오기
+    AAngryBirdGameState* GameState = GetWorld() ? GetWorld()->GetGameState<AAngryBirdGameState>() : nullptr;
+    if (!GameState)
+    {
+        UE_LOG(LogTemp, Error, TEXT("GameState를 찾을 수 없습니다!"));
+        return;
+    }
+    TSubclassOf<class AActor> NextBirdClass = GameState->GetNextBird();
+
+    // 3. 만약 돌려받은 클래스가 비어있다면? -> 대기열에 남은 새가 없다는 뜻! (탄약 소진)
+    if (!NextBirdClass)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("더 이상 장전할 새가 없습니다! (게임 오버 체크 필요)"));
+        return; 
     }
     
     //   새 스폰할때 x축방향을 바라보게
@@ -269,11 +284,11 @@ void ASlingShot::LoadBird()
     FActorSpawnParameters SpawnParams;
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-    CurrentBird = GetWorld()->SpawnActor<AActor>(BirdClass, SpawnLocation, SpawnRotation, SpawnParams);
+    CurrentBird = GetWorld()->SpawnActor<AActor>(NextBirdClass, SpawnLocation, SpawnRotation, SpawnParams);
 
     if (CurrentBird)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("스폰 성공! 파우치에 부착합니다."));
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("GameState에서 새를 받아 스폰 성공!"));
         CurrentBird->AttachToComponent(Pouch, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("LaunchPouch"));
         CurrentBird->SetActorRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
     }
