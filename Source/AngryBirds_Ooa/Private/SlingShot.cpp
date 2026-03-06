@@ -346,9 +346,8 @@ void ASlingShot::PullString()
             FVector PlaneNormal = -RootComp->GetForwardVector();
             // 새총과 파우치 사이의 평면 (OffsetPlanePoint는 새총에서 뒤로 150만큼 떨어진 지점)
             FVector OffsetPlanePoint = SlingshotLoc - (RootComp->GetForwardVector() * 150.0f);
-            // 클릭 시점의 교차점을 기준점으로 기록
-            // LinePlaneIntersection 함수를 사용하여 마우스에서 쏘아진 광선과 평면의 교차점을 계산 LinePlaneIntersection(광선 시작점, 광선 방향, 평면의 한 점, 평면의 법선 벡터) 
-            // 여기서 MouseWorldDir * 10000.0f는 광선을 충분히 멀리 쏘아주는 역할을 합니다. 이 광선과 평면의 교차점이 StartAimLocation이 됩니다.
+
+            
             StartAimLocation = FMath::LinePlaneIntersection(
                 MouseWorldLoc, 
                 MouseWorldLoc + (MouseWorldDir * 10000.0f), 
@@ -363,10 +362,9 @@ void ASlingShot::PullString()
         ABase_Bird* MyBird = Cast<ABase_Bird>(CurrentBird);
         if (MyBird)
         {
-            MyBird->PlayReadyVoice(); // 이 함수가 실행되어야 소리가 들립니다!
+            MyBird->PlayReadyVoice();
         }
     }
-    // trajectory 도 그려주기
     DrawTrajectory();
     
 }
@@ -381,13 +379,11 @@ void ASlingShot::ReleaseString()
 void ASlingShot::IncreasePower()
 {
     PullPower = FMath::Clamp(PullPower + 50.0f, 1.0f, 1000.0f);
-   // GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString::Printf(TEXT("파워 증가! 현재 최대 파워: %f"), PullPower));
 }
 
 void ASlingShot::DecreasePower()
 {
     PullPower = FMath::Clamp(PullPower - 50.0f, 100.0f, 1000.0f);
-  //  GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString::Printf(TEXT("파워 감소! 현재 최대 파워: %f"), PullPower));
 }
 
 void ASlingShot::TriggerBirdAbility()
@@ -399,7 +395,6 @@ void ASlingShot::TriggerBirdAbility()
        {
           MyBird->UseAbility();
           MyBird->bAbilityUsed = true; 
-        //  GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("새 능력 발동!"));
        }
     }
 }
@@ -457,8 +452,8 @@ void ASlingShot::DrawTrajectory()
         
         // 점 크기 조절 (0.5도 너무 크면 0.2f 정도로 줄이세요)
         PointTransform.SetScale3D(FVector(0.3f)); 
-
-        // ★ [핵심 수정 2] 반드시 '월드 좌표' 기준으로 점을 찍어야 합니다!
+        
+        
         TrajectoryISMC->AddInstanceWorldSpace(PointTransform); 
     }
 }
