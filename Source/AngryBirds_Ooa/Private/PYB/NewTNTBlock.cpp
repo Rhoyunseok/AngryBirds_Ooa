@@ -8,6 +8,7 @@
 ANewTNTBlock::ANewTNTBlock()
 {
 	BlockPrice = 300.0f;
+	ExplosionRadius = 500.0f * (GetActorScale3D().Size() * 3);
 }
 
 void ANewTNTBlock::BeginPlay()

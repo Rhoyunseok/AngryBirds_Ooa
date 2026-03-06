@@ -1,22 +1,30 @@
 #include "RHO/StageSelectWidget.h"
 #include "Components/Button.h"
 #include "Kismet/GameplayStatics.h"
-// 미디어 기능을 사용하기 위한 헤더 추가
 #include "MediaPlayer.h"
 #include "MediaSource.h"
+// 사운드 관련 헤더 추가
+#include "Sound/SoundBase.h"
+#include "Components/AudioComponent.h"
 
 void UStageSelectWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// 1. 배경 영상 재생 로직 (추가)
+	// 1. 배경 영상 재생 로직
 	if (StageMediaPlayer && StageVideoSource)
 	{
 		StageMediaPlayer->OpenSource(StageVideoSource);
 		StageMediaPlayer->Play();
 	}
 
-	// 2. 버튼 클릭 이벤트 바인딩
+	// 2. 배경 음악 재생 로직 (추가)
+	if (StageSelectBGM)
+	{
+		BGMComponent = UGameplayStatics::SpawnSound2D(this, StageSelectBGM);
+	}
+
+	// 3. 버튼 클릭 이벤트 바인딩
 	if (Btn_BackToMainMenu)
 	{
 		Btn_BackToMainMenu->OnClicked.AddDynamic(this, &UStageSelectWidget::OnBackToMainMenuClicked);
@@ -35,15 +43,18 @@ void UStageSelectWidget::NativeConstruct()
 
 void UStageSelectWidget::OnBackToMainMenuClicked()
 {
+	if (BGMComponent) BGMComponent->Stop();
 	UGameplayStatics::OpenLevel(this, FName("MainMenu"));
 }
 
 void UStageSelectWidget::OnTutorialClicked()
 {
+	if (BGMComponent) BGMComponent->Stop();
 	UGameplayStatics::OpenLevel(this, FName("TestLevel")); 
 }
 
 void UStageSelectWidget::OnStage1_1Clicked()
 {
+	if (BGMComponent) BGMComponent->Stop();
 	UGameplayStatics::OpenLevel(this, FName("TestLevel")); 
 }
