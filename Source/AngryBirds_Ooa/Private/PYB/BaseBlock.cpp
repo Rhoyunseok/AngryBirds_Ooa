@@ -110,6 +110,7 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	if (OtherActor->IsA(ABase_Bird::StaticClass()))
 	{
 		SelectedThreshold = BirdThreshold;
+		UE_LOG(LogTemp, Log, TEXT("새..."));
 	}
 	
 	float ImpactSpeed = FMath::Abs(OtherSpeed - this->GetVelocity().Size());
