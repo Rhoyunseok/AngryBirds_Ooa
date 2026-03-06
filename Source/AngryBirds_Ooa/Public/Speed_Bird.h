@@ -21,4 +21,19 @@ protected:
 	// 대쉬 속도 (발사 속도보다 높게 설정)
 	UPROPERTY(EditAnywhere, Category = "Ability")
 	float DashPower;
+	
+protected:
+    // 대시 시 목표 FOV (기본은 보통 90)
+    UPROPERTY(EditAnywhere, Category = "Effects")
+    float DashFOV = 110.0f;
+
+    // FOV가 원래대로 돌아오는 속도
+    UPROPERTY(EditAnywhere, Category = "Effects")
+    float FOVInterpSpeed = 5.0f;
+
+    bool bIsDashing = false;
+
+public:
+    virtual void Tick(float DeltaTime) override;	
+	
 };

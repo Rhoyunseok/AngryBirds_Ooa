@@ -352,6 +352,15 @@ void ASlingShot::PullString()
             );
         }
     }
+    // 추가해야 할 부분: 현재 장전된 새에게 기합 소리를 내라고 명령
+    if (CurrentBird)
+    {
+        ABase_Bird* MyBird = Cast<ABase_Bird>(CurrentBird);
+        if (MyBird)
+        {
+            MyBird->PlayReadyVoice(); // 이 함수가 실행되어야 소리가 들립니다!
+        }
+    }
 }
 
 void ASlingShot::ReleaseString()
