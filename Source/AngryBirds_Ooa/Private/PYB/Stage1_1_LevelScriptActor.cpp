@@ -1,24 +1,17 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PYB/YB_LevelScriptActor.h"
+#include "PYB/Stage1_1_LevelScriptActor.h"
 
-#include "Base_Bird.h"
-#include "Bomb_Bird.h"
+#include "SlingShot.h"
 #include "Kismet/GameplayStatics.h"
 #include "RHO/AngryBirdGameState.h"
-#include "SlingShot.h"
-#include "Speed_Bird.h"
-// 돼지의 수를 GameState 에 전송
-void AYB_LevelScriptActor::BeginPlay()
+
+void AStage1_1_LevelScriptActor::BeginPlay()
 {
 	Super::BeginPlay();
 	PigNum = 2;
 	StageInfo = "Tutorial Map";
-	// LevelBirds.Empty();
-	// LevelBirds.Add(ABase_Bird::StaticClass());
-	// LevelBirds.Add(ASpeed_Bird::StaticClass());
-	// LevelBirds.Add(ABomb_Bird::StaticClass());
 	// GameState 전송하기
 	
 	AAngryBirdGameState* GameState = Cast<AAngryBirdGameState>(UGameplayStatics::GetGameState(this));
@@ -28,7 +21,7 @@ void AYB_LevelScriptActor::BeginPlay()
 		GameState->SetTotalPigs(PigNum);
         
 		// 여기서 사용할 수 있는 새의 수도 전달하고 싶다면 똑같이 호출하면 됩니다.
-		GameState->SetTotalBirds(5); 
+		GameState->SetTotalBirds(3); 
 		
 		// Stage Info 
 		GameState->SetStageInfo(StageInfo);
@@ -50,7 +43,7 @@ void AYB_LevelScriptActor::BeginPlay()
 	}
 }
 
-void AYB_LevelScriptActor::ShowLevelInfo()
+void AStage1_1_LevelScriptActor::ShowLevelInfo()
 {
 	UE_LOG(LogTemp, Warning, TEXT("PigNum: %d, StageInfo: %s"), PigNum, *StageInfo);
 }

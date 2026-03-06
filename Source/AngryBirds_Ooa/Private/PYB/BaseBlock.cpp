@@ -19,8 +19,8 @@ ABaseBlock::ABaseBlock()
 	bodyMeshComp->SetCollisionProfileName(TEXT("BlockAll"));
 	bodyMeshComp->SetNotifyRigidBodyCollision(true);
 	bodyMeshComp->SetSimulatePhysics(true);
-	bodyMeshComp->SetLinearDamping(1.0f);
-	bodyMeshComp->SetAngularDamping(1.0f);
+	bodyMeshComp->SetLinearDamping(0.0f);
+	bodyMeshComp->SetAngularDamping(0.0f);
 	
 	bodyMeshComp->GetBodyInstance()->bOverrideMass = true;
 	bodyMeshComp->GetBodyInstance()->SetMassOverride(100.0f);
@@ -53,6 +53,10 @@ void ABaseBlock::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// FVector GravityForce = FVector(0.f, 0.f, -2000.f);
+         
+	// // 세 번째 인자 true: 질량(Mass)을 무시하고 가속도로 적용 (Force 대신 Accel)
+	// bodyMeshComp->AddForce(GravityForce, NAME_None, true);
 }
 
 float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)

@@ -50,11 +50,11 @@ void UStageSelectWidget::OnBackToMainMenuClicked()
 void UStageSelectWidget::OnTutorialClicked()
 {
 	if (BGMComponent) BGMComponent->Stop();
-	UGameplayStatics::OpenLevel(this, FName("TestLevel")); 
+	UGameplayStatics::OpenLevel(this, FName("TutorialMap")); 
 }
 
 void UStageSelectWidget::OnStage1_1Clicked()
 {
 	if (BGMComponent) BGMComponent->Stop();
-	UGameplayStatics::OpenLevel(this, FName("TestLevel")); 
+	UGameplayStatics::OpenLevel(this, FName("TutorialMap")); 
 }
