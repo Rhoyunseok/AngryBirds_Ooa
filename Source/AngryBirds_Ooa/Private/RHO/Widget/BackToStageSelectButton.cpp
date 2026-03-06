@@ -11,9 +11,14 @@ void UBackToStageSelectButton::NativeConstruct()
 	Super::NativeConstruct();
 	
 	// 버튼이 눌렸을 때 실행할 함수들을 연결
-	if (UButton* BackToStageSelectButton = Cast<UButton>(GetWidgetFromName(TEXT("WBP_BackToStageSelectButton"))))
+	if (Btn_StageSelect)
 	{
-		BackToStageSelectButton->OnClicked.AddDynamic(this, &UBackToStageSelectButton::OnBackToStageSelectClicked);
+		Btn_StageSelect->OnClicked.AddDynamic(this, &UBackToStageSelectButton::OnBackToStageSelectClicked);
+	}
+	
+	if (Btn_Quit)
+	{
+		Btn_Quit->OnClicked.AddDynamic(this, &UBackToStageSelectButton::OnQuitClicked);
 	}
 }
 
