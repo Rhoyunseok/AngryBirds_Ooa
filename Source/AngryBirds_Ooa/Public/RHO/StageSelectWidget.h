@@ -20,12 +20,19 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Btn_Stage1_1;
 
-	// --- 미디어 재생을 위한 변수 추가 ---
+	// --- 미디어 재생을 위한 변수 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Media")
 	class UMediaPlayer* StageMediaPlayer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Media")
 	class UMediaSource* StageVideoSource;
+
+	// --- 추가된 사운드 변수 ---
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	class USoundBase* StageSelectBGM;
+
+	UPROPERTY()
+	class UAudioComponent* BGMComponent;
 
 	virtual void NativeConstruct() override;
     
