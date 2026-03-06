@@ -24,7 +24,7 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Btn_Stage1_1;
 	
-	virtual void NativeConstruct(); __override; // 위젯이 화면에 처음 생성될 때 실행되는 함수
+	virtual void NativeConstruct() override; // 위젯이 화면에 처음 생성될 때 실행되는 함수
 	
 private:
 	

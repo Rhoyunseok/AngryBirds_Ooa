@@ -17,6 +17,7 @@
  * - 현재 스테이지 이름 - 레벨에서 가져옴
  * - 새를 사용하면 이 정보는 
  * 를 관리할 예정
+ * 
  */
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreChanged, int32, NewScore);
@@ -44,6 +45,16 @@ public:
 	FOnStarsChanged OnStarsChanged;
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnStageInfoChanged OnStageInfoChanged;
+	// 현재 스테이지에서 쏠 새들의 순서를 담아둘 대기열 배열
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "State|Birds")
+	TArray<TSubclassOf<class AActor>> BirdQueue; // (AActor 대신 본인의 새 부모 클래스를 쓰세요!)
+	// 1. 레벨 스크립트가 새 배열을 통째로 넘겨줄 때 쓸 함수
+	UFUNCTION(BlueprintCallable, Category = "State|Birds")
+	void SetBirdQueue(const TArray<TSubclassOf<class AActor>>& NewBirdQueue);
+	// 2. 새총이 "다음 쏠 새 줘!" 할 때 꺼내주는 함수
+	UFUNCTION(BlueprintCallable, Category = "State|Birds")
+	TSubclassOf<class AActor> GetNextBird();
+	
 	
 	// -- 데이터 조회 함수 (Getter) 추가 --
 	UFUNCTION(BlueprintCallable, Category = "State")
@@ -77,12 +88,26 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "State")
 	FString CurrentStageInfo;
 	
+	
 	// -- 데이터 수정 함수 (Setter) --
+	UFUNCTION(BlueprintCallable, Category = "State")
 	void AddScore(int32 Amount);
+	
+	UFUNCTION(BlueprintCallable, Category = "State")
 	void SetTotalPigs(int32 Count);
+	
+	UFUNCTION(BlueprintCallable, Category = "State")
 	void DecreasePigCount();
+	
+	UFUNCTION(BlueprintCallable, Category = "State")
 	void SetTotalBirds(int32 Count);
+	
+	UFUNCTION(BlueprintCallable, Category = "State")
 	void UseBird();
+	
+	UFUNCTION(BlueprintCallable, Category = "State")
 	void UpdateStars(int32 NewStars);
+	
+	UFUNCTION(BlueprintCallable, Category = "State")
 	void SetStageInfo(const FString& NewStageInfo);
 };
