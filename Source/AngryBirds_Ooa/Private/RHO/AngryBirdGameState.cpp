@@ -1,12 +1,19 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "RHO/AngryBirdGameState.h"
+
+#include "Base_Bird.h"
+#include "Kismet/GameplayStatics.h"
+#include "Rho/Save/MyGameInstance.h"
+
+
 
 AAngryBirdGameState::AAngryBirdGameState()
 {
 	// 초기값 설정
 }
+
+
 
 void AAngryBirdGameState::AddScore(int32 Amount)
 {
@@ -27,6 +34,10 @@ void AAngryBirdGameState::DecreasePigCount()
 	OnPigsChanged.Broadcast(RemainingPigs, TotalPigs);
     
 	// 만약 여기서 돼지가 0마리가 되면 승리 이벤트를 보낼 수도 있습니다.
+	if (RemainingPigs==0)
+	{
+		CheckMatchState();
+	}
 }
 
 void AAngryBirdGameState::SetTotalBirds(int32 Count)
@@ -93,4 +104,59 @@ TSubclassOf<class AActor> AAngryBirdGameState::GetNextBird()
 
 	// 5. 새총에게 "자, 이 새 스폰해서 장전해라!" 하고 돌려줌
 	return NextBirdClass;
+}
+
+void AAngryBirdGameState::CheckMatchState()
+{
+	if (bIsGameOver) return; 
+
+	// 조건 1: 돼지가 0마리 이하면 승리!
+	if (RemainingPigs <= 0)
+	{
+		bIsGameOver = true;
+ 
+		int32 EarnedStars = 1; 
+		
+		UMyGameInstance* MyGI = Cast<UMyGameInstance>(GetGameInstance());
+		if (MyGI)
+		{
+			// 3. 매니저에게 "현재 스테이지 이름"과 "계산된 별 개수"를 넘겨서 저장 지시!
+			// (CurrentStageInfo는 레벨 스크립트에서 넘겨받았던 그 이름입니다!)
+			MyGI->SaveStageClearData(CurrentStageInfo, EarnedStars);
+           
+			UE_LOG(LogTemp, Warning, TEXT("[%s] 클리어! 획득한 별: %d 개 -> 하드디스크 저장 완료!"), *CurrentStageInfo, EarnedStars);
+		}
+		// ==========================================
+
+		OnGameCleared.Broadcast(); // UI에게 승리창 띄우라고 방송
+	}
+	// 조건 2: 패배 (기존과 동일)
+	else if (RemainingPigs > 0 && RemainingBirds <= 0)
+	{
+		TArray<AActor*> FoundBirds;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABase_Bird::StaticClass(), FoundBirds);
+
+		int32 AliveBirds = 0;
+		for (AActor* Bird : FoundBirds)
+		{
+			// 막 파괴되고 있는 새(IsActorBeingDestroyed)가 아니라면 살아있는 걸로 친다!
+			if (IsValid(Bird) && !Bird->IsActorBeingDestroyed())
+			{
+				AliveBirds++;
+			}
+		}
+
+		// 심판: "진짜 살아있는 새가 단 1마리도 없을 때만 패배다!"
+		if (AliveBirds == 0)
+		{
+			bIsGameOver = true;
+			OnGameOver.Broadcast();
+           
+			UE_LOG(LogTemp, Warning, TEXT("패배! 탄약도 없고, 살아있는 새도 없음!"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("아직 화면에 살아있는 새가 %d마리 있어서 패배 보류!"), AliveBirds);
+		}
+	}
 }

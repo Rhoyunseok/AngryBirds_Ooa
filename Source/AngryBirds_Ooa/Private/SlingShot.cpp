@@ -265,7 +265,7 @@ void ASlingShot::LoadBird()
     AAngryBirdGameState* GameState = GetWorld() ? GetWorld()->GetGameState<AAngryBirdGameState>() : nullptr;
     if (!GameState)
     {
-        UE_LOG(LogTemp, Error, TEXT("GameState를 찾을 수 없습니다!"));
+        UE_LOG(LogTemp, Error, TEXT("GameState를 찾을 수 없습니다! / slingshot.cpp"));
         return;
     }
     TSubclassOf<class AActor> NextBirdClass = GameState->GetNextBird();
@@ -273,7 +273,8 @@ void ASlingShot::LoadBird()
     // 3. 만약 돌려받은 클래스가 비어있다면? -> 대기열에 남은 새가 없다는 뜻! (탄약 소진)
     if (!NextBirdClass)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("더 이상 장전할 새가 없습니다! (게임 오버 체크 필요)"));
+        UE_LOG(LogTemp, Warning, TEXT("개못하네"));
+        // 여기서 게임 오버 체크를 위해 GameState의 CheckMatchState() 함수를 호출할 수도 있
         return; 
     }
     

@@ -69,7 +69,8 @@ public:
 
     // 카메라 복귀 시퀀스 함수
     void StartCameraReturn();
-    void DestroyBird();
+public:
+    virtual void DestroyBird();
     
 protected:
     float LaunchTime = 0.0f; 
