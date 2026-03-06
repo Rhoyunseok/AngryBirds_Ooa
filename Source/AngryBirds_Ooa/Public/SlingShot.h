@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/DynamicMeshComponent.h" 
+#include "Components/DynamicMeshComponent.h"
+#include "Components/InstancedStaticMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "SlingShot.generated.h"
 
 UCLASS()
@@ -83,11 +85,6 @@ public:
 	
 	// 고무줄(Dynamic Mesh)을 파우치 위치에 맞춰 다시 그리는 함수
 	void UpdateBands();
-	
-	//발사체 관련 >_<
-	// 블루프린트에서 어떤 새(액터)를 스폰할지 지정하는 클래스 변수
-//	UPROPERTY(EditAnywhere, Category = "Slingshot | Projectile")
-	// TSubclassOf<AActor> BirdClass;
 
 	// 장전 함수
 	UFUNCTION(BlueprintCallable, Category = "Slingshot")
@@ -116,7 +113,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Slingshot")
 	void TriggerBirdAbility();
 	
-	// MoveIgnoreActorAdd
+	// 궤적을 그릴 인스턴스드 스태틱 메시 컴포넌트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Trajectory")
+	UInstancedStaticMeshComponent* TrajectoryISMC;
+
+	// 궤적 계산 및 그리기 함수
+	void DrawTrajectory();
+    
+	// 궤적 지우기 함수
+	void ClearTrajectory();
 	
 	
 private:

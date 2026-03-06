@@ -25,6 +25,9 @@ ASlingShot::ASlingShot()
     RightBand = CreateDefaultSubobject<UDynamicMeshComponent>(TEXT("RightBand"));
     RightBand->SetupAttachment(RootComp);
     
+    TrajectoryISMC = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("TrajectoryISMC"));
+    TrajectoryISMC->SetupAttachment(RootComp);
+    
     bIsAiming = false;
     bIsReturning = false; 
     PullPower = 0.1f; 
@@ -111,16 +114,7 @@ void ASlingShot::UpdateAim(APlayerController* PlayerController)
             OffsetPlanePoint, 
             PlaneNormal
         );
-        // DrawDebugLine( 
-        //     GetWorld(), 
-        //     MouseWorldLoc, 
-        //     MouseWorldLoc + (MouseWorldDir * 10000.0f), 
-        //     FColor::Green, 
-        //     false, 
-        //     -1.0f,
-        //     0, 
-        //     2.0f
-        // );
+       
 
         // StartAimLocation 은 PullString() 함수에서 마우스 클릭 시점의 교차점을 기록한 위치입니다.
         FVector WorldDelta = CurrentIntersection - StartAimLocation;
@@ -136,14 +130,6 @@ void ASlingShot::UpdateAim(APlayerController* PlayerController)
         NewLocalPouchLoc.Y = DefaultPouchLocation.Y + LocalDelta.Y; // 마우스 좌우 오프셋
         NewLocalPouchLoc.Z = DefaultPouchLocation.Z + LocalDelta.Z; // 마우스 상하 오프셋
         
-        // if (GEngine)
-        // {
-        //     FString DebugMsg = FString::Printf(TEXT("Mouse Z Delta: %f / Final Z: %f"), LocalDelta.Z, NewLocalPouchLoc.Z);
-        //     FString DebugMsgY = FString::Printf(TEXT("Mouse Y Delta: %f / Final Y: %f"), LocalDelta.Y, NewLocalPouchLoc.Y);
-        //     GEngine->AddOnScreenDebugMessage(1, 0.0f, FColor::Yellow, DebugMsg);
-        //     GEngine->AddOnScreenDebugMessage(2, 0.0f, FColor::Yellow, DebugMsgY);
-        // }
-
         // 5. 상하좌우 조준 제한 (너무 많이 꺾이지 않게) // Clamp( 값, 최소, 최대 ) 함수를 사용하여 Y와 Z축의 위치를 제한합니다. 이 범위는 필요에 따라 조절할 수 있습니다.
         float ClampRange = 150.0f; // 이동 가능 범위
 
@@ -184,7 +170,10 @@ void ASlingShot::UpdateAim(APlayerController* PlayerController)
                 CurrentBird->SetActorRotation(TargetRot);
             }
         }
+        DrawTrajectory();
     }
+    
+    
 }
 
 void ASlingShot::UpdateBands()
@@ -377,12 +366,16 @@ void ASlingShot::PullString()
             MyBird->PlayReadyVoice(); // 이 함수가 실행되어야 소리가 들립니다!
         }
     }
+    // trajectory 도 그려주기
+    DrawTrajectory();
+    
 }
 
 void ASlingShot::ReleaseString()
 {
     bIsAiming = false; 
-    FireBird(); 
+    FireBird();
+    ClearTrajectory();
 }
 
 void ASlingShot::IncreasePower()
@@ -408,5 +401,71 @@ void ASlingShot::TriggerBirdAbility()
           MyBird->bAbilityUsed = true; 
         //  GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("새 능력 발동!"));
        }
+    }
+}
+
+void ASlingShot::DrawTrajectory()
+{
+    // 새가 없거나 컴포넌트가 없으면 패스
+    if (!CurrentBird || !TrajectoryISMC) return;
+
+    // 1. 매 프레임 새로 그려야 하므로 기존 점들을 모두 지웁니다.
+    TrajectoryISMC->ClearInstances();
+
+    // 2. FireBird()와 동일한 발사 속도 계산 로직
+    FVector OriginLocation = RootComp->GetComponentTransform().TransformPosition(DefaultPouchLocation);
+    FVector CurrentPouchLoc = Pouch->GetSocketLocation(FName("LaunchPouch")); 
+    FVector PullVector = OriginLocation - CurrentPouchLoc;
+
+    float ForceMultiplier = 10.0f; // FireBird()와 동일한 배수
+    FVector LaunchVelocity = PullVector * ForceMultiplier;
+
+    // 너무 안 당겼으면 그리지 않음
+    if (LaunchVelocity.IsNearlyZero()) return;
+
+    //345
+    // 3. 언리얼 엔진의 궤적 예측 파라미터 세팅
+    FPredictProjectilePathParams PredictParams;
+    PredictParams.StartLocation = CurrentPouchLoc; // 발사 시작 위치
+    PredictParams.LaunchVelocity = LaunchVelocity; // 초기 속도
+    PredictParams.bTraceWithCollision = true;      // 벽에 닿으면 궤적 끊기
+    PredictParams.bTraceWithChannel = true;
+    PredictParams.TraceChannel = ECC_WorldStatic;  // 지형지물 채널
+    PredictParams.MaxSimTime = 3.0f;               // 몇 초 뒤의 미래까지 그릴지 (길이 조절)
+    PredictParams.SimFrequency = 15.0f;            // 점의 간격 (숫자가 클수록 촘촘해짐)
+    PredictParams.OverrideGravityZ = -980.0f;      // 중력 덮어쓰기
+
+    // ★ [핵심 수정 1] 예측선이 새총이나 새에 닿아서 즉시 끊기는 현상 방지
+    PredictParams.ActorsToIgnore.Add(this);
+    if (CurrentBird)
+    {
+        PredictParams.ActorsToIgnore.Add(CurrentBird);
+    }
+
+    // (테스트용) 여전히 점이 안 보인다면 아래 주석을 풀어서 초록색 디버그 선이 나오는지부터 확인하세요!
+    // PredictParams.DrawDebugType = EDrawDebugTrace::ForOneFrame;
+
+    // 4. 경로 예측 실행
+    FPredictProjectilePathResult PredictResult;
+    UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
+
+    // 5. 예측된 경로 데이터를 바탕으로 인스턴스(점) 찍기
+    for (const FPredictProjectilePathPointData& PointData : PredictResult.PathData)
+    {
+        FTransform PointTransform;
+        PointTransform.SetLocation(PointData.Location);
+        
+        // 점 크기 조절 (0.5도 너무 크면 0.2f 정도로 줄이세요)
+        PointTransform.SetScale3D(FVector(0.3f)); 
+
+        // ★ [핵심 수정 2] 반드시 '월드 좌표' 기준으로 점을 찍어야 합니다!
+        TrajectoryISMC->AddInstanceWorldSpace(PointTransform); 
+    }
+}
+void ASlingShot::ClearTrajectory()
+{
+    if (TrajectoryISMC)
+    {
+        TrajectoryISMC->ClearInstances();
     }
 }
