@@ -38,7 +38,7 @@ void ABaseBlock::BeginPlay()
 	{
 		DynamicMaterial = bodyMeshComp->CreateDynamicMaterialInstance(0, BaseMaterial);
 		bodyMeshComp->SetMaterial(0, DynamicMaterial);
-		UE_LOG(LogTemp, Warning, TEXT("Successfully Created: %s"), *DynamicMaterial->GetName());
+		// UE_LOG(LogTemp, Warning, TEXT("Successfully Created: %s"), *DynamicMaterial->GetName());
 	}
 }
 
@@ -68,9 +68,9 @@ float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& Dama
 		if (DynamicMaterial)
 		{
 			DynamicMaterial->SetScalarParameterValue(FName("CrackAmount"), 0.8);
-			float temp = 0.0f;
-			DynamicMaterial->GetScalarParameterValue(FName("CrackAmount"), temp);
-			UE_LOG(LogTemp, Warning, TEXT("BlockHP: %f, DynamicMat: %s"), temp, *DynamicMaterial->GetName());
+			// float temp = 0.0f;
+			// DynamicMaterial->GetScalarParameterValue(FName("CrackAmount"), temp);
+			// UE_LOG(LogTemp, Warning, TEXT("BlockHP: %f, DynamicMat: %s"), temp, *DynamicMaterial->GetName());
 		}
 		DamageState = 1;
 	}
@@ -118,7 +118,7 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	
 	if (ImpactSpeed > SelectedThreshold)
 	{
-		float CalculatedDamage = (ImpactSpeed - SelectedThreshold) / 10;
+		float CalculatedDamage = 50 + (ImpactSpeed - SelectedThreshold) / 10;
 
 		// 나 자신에게 데미지를 입힘 (내가 부딪혀서 아픔)
 		UGameplayStatics::ApplyDamage(this, CalculatedDamage, nullptr, OtherActor, UDamageType::StaticClass());

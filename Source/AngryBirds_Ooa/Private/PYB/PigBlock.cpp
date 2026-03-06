@@ -6,6 +6,11 @@
 #include "Kismet/GameplayStatics.h"
 
 
+APigBlock::APigBlock()
+{
+	BirdThreshold = 10.0f;
+}
+
 void APigBlock::BeginPlay()
 {
 	Super::BeginPlay();

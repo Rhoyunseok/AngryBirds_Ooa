@@ -13,6 +13,9 @@ class ANGRYBIRDS_OOA_API APigBlock : public ABaseBlock
 {
 	GENERATED_BODY()
 	
+public:
+	APigBlock();
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void BeforeBlockDestory() override;
