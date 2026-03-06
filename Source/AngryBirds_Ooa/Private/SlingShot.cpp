@@ -111,16 +111,16 @@ void ASlingShot::UpdateAim(APlayerController* PlayerController)
             OffsetPlanePoint, 
             PlaneNormal
         );
-        DrawDebugLine( 
-            GetWorld(), 
-            MouseWorldLoc, 
-            MouseWorldLoc + (MouseWorldDir * 10000.0f), 
-            FColor::Green, 
-            false, 
-            -1.0f,
-            0, 
-            2.0f
-        );
+        // DrawDebugLine( 
+        //     GetWorld(), 
+        //     MouseWorldLoc, 
+        //     MouseWorldLoc + (MouseWorldDir * 10000.0f), 
+        //     FColor::Green, 
+        //     false, 
+        //     -1.0f,
+        //     0, 
+        //     2.0f
+        // );
 
         // StartAimLocation 은 PullString() 함수에서 마우스 클릭 시점의 교차점을 기록한 위치입니다.
         FVector WorldDelta = CurrentIntersection - StartAimLocation;
@@ -136,13 +136,13 @@ void ASlingShot::UpdateAim(APlayerController* PlayerController)
         NewLocalPouchLoc.Y = DefaultPouchLocation.Y + LocalDelta.Y; // 마우스 좌우 오프셋
         NewLocalPouchLoc.Z = DefaultPouchLocation.Z + LocalDelta.Z; // 마우스 상하 오프셋
         
-        if (GEngine)
-        {
-            FString DebugMsg = FString::Printf(TEXT("Mouse Z Delta: %f / Final Z: %f"), LocalDelta.Z, NewLocalPouchLoc.Z);
-            FString DebugMsgY = FString::Printf(TEXT("Mouse Y Delta: %f / Final Y: %f"), LocalDelta.Y, NewLocalPouchLoc.Y);
-            GEngine->AddOnScreenDebugMessage(1, 0.0f, FColor::Yellow, DebugMsg);
-            GEngine->AddOnScreenDebugMessage(2, 0.0f, FColor::Yellow, DebugMsgY);
-        }
+        // if (GEngine)
+        // {
+        //     FString DebugMsg = FString::Printf(TEXT("Mouse Z Delta: %f / Final Z: %f"), LocalDelta.Z, NewLocalPouchLoc.Z);
+        //     FString DebugMsgY = FString::Printf(TEXT("Mouse Y Delta: %f / Final Y: %f"), LocalDelta.Y, NewLocalPouchLoc.Y);
+        //     GEngine->AddOnScreenDebugMessage(1, 0.0f, FColor::Yellow, DebugMsg);
+        //     GEngine->AddOnScreenDebugMessage(2, 0.0f, FColor::Yellow, DebugMsgY);
+        // }
 
         // 5. 상하좌우 조준 제한 (너무 많이 꺾이지 않게) // Clamp( 값, 최소, 최대 ) 함수를 사용하여 Y와 Z축의 위치를 제한합니다. 이 범위는 필요에 따라 조절할 수 있습니다.
         float ClampRange = 150.0f; // 이동 가능 범위
@@ -289,7 +289,7 @@ void ASlingShot::LoadBird()
 
     if (CurrentBird)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("GameState에서 새를 받아 스폰 성공!"));
+        //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("GameState에서 새를 받아 스폰 성공!"));
         CurrentBird->AttachToComponent(Pouch, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("LaunchPouch"));
         CurrentBird->SetActorRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
     }
@@ -388,13 +388,13 @@ void ASlingShot::ReleaseString()
 void ASlingShot::IncreasePower()
 {
     PullPower = FMath::Clamp(PullPower + 50.0f, 1.0f, 1000.0f);
-    GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString::Printf(TEXT("파워 증가! 현재 최대 파워: %f"), PullPower));
+   // GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString::Printf(TEXT("파워 증가! 현재 최대 파워: %f"), PullPower));
 }
 
 void ASlingShot::DecreasePower()
 {
     PullPower = FMath::Clamp(PullPower - 50.0f, 100.0f, 1000.0f);
-    GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString::Printf(TEXT("파워 감소! 현재 최대 파워: %f"), PullPower));
+  //  GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, FString::Printf(TEXT("파워 감소! 현재 최대 파워: %f"), PullPower));
 }
 
 void ASlingShot::TriggerBirdAbility()
@@ -406,7 +406,7 @@ void ASlingShot::TriggerBirdAbility()
        {
           MyBird->UseAbility();
           MyBird->bAbilityUsed = true; 
-          GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("새 능력 발동!"));
+        //  GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, TEXT("새 능력 발동!"));
        }
     }
 }
