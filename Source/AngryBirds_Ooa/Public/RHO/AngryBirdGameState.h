@@ -26,6 +26,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnBirdsChanged, int32, Remaining, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStarsChanged, int32, Stars);
 // 현재 스테이지 정보도 필요하다면 여기에 선언하세요! (예: FOnStageInfoChanged)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStageInfoChanged, FString, NewStageInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameCleared); // 승리 (돼지 전멸)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameOver);
 
 UCLASS()
 class ANGRYBIRDS_OOA_API AAngryBirdGameState : public AGameStateBase
@@ -45,6 +47,11 @@ public:
 	FOnStarsChanged OnStarsChanged;
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnStageInfoChanged OnStageInfoChanged;
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnGameCleared OnGameCleared;
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnGameOver OnGameOver;
+	
 	// 현재 스테이지에서 쏠 새들의 순서를 담아둘 대기열 배열
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "State|Birds")
 	TArray<TSubclassOf<class AActor>> BirdQueue; // (AActor 대신 본인의 새 부모 클래스를 쓰세요!)
@@ -54,6 +61,7 @@ public:
 	// 2. 새총이 "다음 쏠 새 줘!" 할 때 꺼내주는 함수
 	UFUNCTION(BlueprintCallable, Category = "State|Birds")
 	TSubclassOf<class AActor> GetNextBird();
+
 	
 	
 	// -- 데이터 조회 함수 (Getter) 추가 --
@@ -71,6 +79,8 @@ public:
 	int32 GetCurrentStars() const { return CurrentStars; }
 	UFUNCTION(BlueprintCallable, Category = "State")
 	FString GetCurrentStageInfo() const { return CurrentStageInfo; }
+	UFUNCTION(BlueprintCallable, Category = "State")
+	void CheckMatchState();
 	
 	// -- 데이터 멤버 (State)
 	UPROPERTY(VisibleAnywhere, Category = "State")
@@ -110,4 +120,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "State")
 	void SetStageInfo(const FString& NewStageInfo);
+	
+	UPROPERTY(BlueprintReadOnly, Category = "State")
+	bool bIsGameOver = false;
+	
+	
 };
