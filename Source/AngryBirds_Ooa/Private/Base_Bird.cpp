@@ -299,6 +299,7 @@ void ABase_Bird::DestroyBird()
     
     if (GameState)
     {
+        GameState->ActiveBirdsOnField--;
         // 2. 심판에게 "나 죽었으니, 혹시 이게 마지막 새였고 돼지도 남았으면 패배 처리해!" 라고 알림
         GameState->CheckMatchState();
     }

@@ -124,5 +124,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "State")
 	bool bIsGameOver = false;
 	
+	// 필드에 스폰되어 아직 파괴되지 않은 새의 수
+	int32 ActiveBirdsOnField = 0;
+	
 	
 };

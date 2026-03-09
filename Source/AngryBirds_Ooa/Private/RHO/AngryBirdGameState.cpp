@@ -134,21 +134,8 @@ void AAngryBirdGameState::CheckMatchState()
 	// 2
 	else if (RemainingPigs > 0 && RemainingBirds <= 0)
 	{
-		TArray<AActor*> FoundBirds;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABase_Bird::StaticClass(), FoundBirds);
-
-		int32 AliveBirds = 0;
-		for (AActor* Bird : FoundBirds)
-		{
-			// 막 파괴되고 있는 새(IsActorBeingDestroyed)가 아니라면 살아있는 걸로 친다!
-			if (IsValid(Bird) && !Bird->IsActorBeingDestroyed())
-			{
-				AliveBirds++;
-			}
-		}
-
-		// 심판: "진짜 살아있는 새가 단 1마리도 없을 때만 패배다!"
-		if (AliveBirds == 0)
+		// [수정] 무거운 GetAllActorsOfClass 반복문을 전부 지우고 변수 하나로 깔끔하게 체크합니다!
+		if (ActiveBirdsOnField == 0)
 		{
 			bIsGameOver = true;
 			OnGameOver.Broadcast();
@@ -157,7 +144,7 @@ void AAngryBirdGameState::CheckMatchState()
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("아직 화면에 살아있는 새가 %d마리 있어서 패배 보류!"), AliveBirds);
+			UE_LOG(LogTemp, Warning, TEXT("아직 화면에 살아있는 새가 %d마리 있어서 패배 보류!"), ActiveBirdsOnField);
 		}
 	}
 }

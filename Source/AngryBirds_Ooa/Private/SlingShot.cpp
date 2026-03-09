@@ -270,6 +270,7 @@ void ASlingShot::LoadBird()
 
     if (CurrentBird)
     {
+        GameState->ActiveBirdsOnField++; // 새가 스폰될 때마다 카운트 증가
         //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("GameState에서 새를 받아 스폰 성공!"));
         CurrentBird->AttachToComponent(Pouch, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("LaunchPouch"));
         CurrentBird->SetActorRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
