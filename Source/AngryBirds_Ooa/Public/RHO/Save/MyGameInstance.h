@@ -18,7 +18,7 @@ public:
 	
 	virtual void Init() override;
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, Category = "SaveData")
 	class UAngryBirdSaveGame* CurrentSaveData;
 	
 	FString SaveSlotName = TEXT("PlayerSaveSlot");
@@ -36,5 +36,6 @@ public:
 	// 4. 스테이지 선택 창에서 특정 맵의 별점 물어보기 (UI가 부를 함수)
 	UFUNCTION(BlueprintCallable, Category = "SaveSystem")
 	int32 GetStageClearStars(FString StageName);
+	
 	
 };

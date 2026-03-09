@@ -37,9 +37,14 @@ void UMyGameInstance::SaveGame()
 {
     if (CurrentSaveData)
     {
-        // 바구니의 내용을 하드디스크에 물리적으로 덮어씌워서 저장!
-        UGameplayStatics::AsyncSaveGameToSlot(CurrentSaveData, SaveSlotName, 0); // 비동기 형식으로 저장
-        UE_LOG(LogTemp, Warning, TEXT("게임 진행 상황이 비동기로 저장되었습니다!"));
+        // Async 대신 일반 SaveGameToSlot 사용 (즉시 저장)
+        bool bSuccess = UGameplayStatics::SaveGameToSlot(CurrentSaveData, SaveSlotName, 0);
+        
+        if(bSuccess) {
+            UE_LOG(LogTemp, Warning, TEXT("!!! 즉시 저장 성공 !!!"));
+        } else {
+            UE_LOG(LogTemp, Error, TEXT("!!! 저장 실패 (슬롯 이름 확인 필요) !!!"));
+        }
     }
 }
 
@@ -47,6 +52,7 @@ void UMyGameInstance::SaveStageClearData(FString StageName, int32 Stars)
 {
     if (!CurrentSaveData) return;
 
+    UE_LOG(LogTemp, Warning, TEXT("저장 시도 이름: [%s], 별 개수: %d"), *StageName, Stars);
     // 기존 기록이 있는지 확인
     if (CurrentSaveData->StageClearRecords.Contains(StageName))
     {
@@ -68,11 +74,18 @@ void UMyGameInstance::SaveStageClearData(FString StageName, int32 Stars)
 
 int32 UMyGameInstance::GetStageClearStars(FString StageName)
 {
+    if (!CurrentSaveData)
+    {
+        LoadGame();
+    }
+
     if (CurrentSaveData && CurrentSaveData->StageClearRecords.Contains(StageName))
     {
-        // 기록이 있으면 그 별 개수를 돌려줌
-        return CurrentSaveData->StageClearRecords[StageName];
+        int32 StarCount = CurrentSaveData->StageClearRecords[StageName];
+        UE_LOG(LogTemp, Warning, TEXT("====> [성공] %s 데이터 찾음: %d 개"), *StageName, StarCount);
+        return StarCount;
     }
-    // 한 번도 깬 적 없는 맵이면 별 0개!
+
+    UE_LOG(LogTemp, Error, TEXT("====> [실패] %s 데이터를 찾을 수 없음!"), *StageName);
     return 0;
 }

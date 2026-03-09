@@ -159,17 +159,16 @@ void AAngryBirdGameState::ProcessVictory()
 	UMyGameInstance* MyGI = Cast<UMyGameInstance>(GetGameInstance());
 	if (MyGI)
 	{
-		// [핵심 디버깅 포인트] 만약 스테이지 이름이 비어있다면, 저장이 꼬이므로 경고를 띄우고 임시 이름을 줍니다.
+		// 핵심 디버깅 포인트] 만약 스테이지 이름이 비어있다면, 저장이 꼬이므로 경고를 띄우고 임시 이름을 줍니다.
 		if (CurrentStageInfo.IsEmpty())
 		{
 			UE_LOG(LogTemp, Error, TEXT("경고: CurrentStageInfo가 비어있습니다! 레벨 스크립트에서 SetStageInfo를 안 불렀나요? 임시로 'Stage1_1'로 덮어씌웁니다."));
-			CurrentStageInfo = TEXT("Stage1_1");
+			CurrentStageInfo = TEXT("Tutorial Map"); 
 		}
 
-		// 디스크에 저장!
+		// 저장하기 직전에 로그로 한 번 더 확인
+		UE_LOG(LogTemp, Warning, TEXT("저장 시도 이름: [%s]"), *CurrentStageInfo);
 		MyGI->SaveStageClearData(CurrentStageInfo, EarnedStars);
-          
-		UE_LOG(LogTemp, Warning, TEXT("[%s] 클리어! 획득한 별: %d 개 -> 하드디스크 저장 완료!"), *CurrentStageInfo, EarnedStars);
 	}
     
 	// 3. UI 띄우기

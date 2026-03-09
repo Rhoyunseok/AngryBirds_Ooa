@@ -8,6 +8,7 @@
 #include "Components/AudioComponent.h"
 #include "RHO/Save/MyGameInstance.h"
 #include "Components/TextBlock.h"
+#include "RHO/Widget/StarWidget.h"
 
 void UStageSelectWidget::NativeConstruct()
 {
@@ -41,8 +42,8 @@ void UStageSelectWidget::NativeConstruct()
 	{
 		Btn_Stage1_1->OnClicked.AddDynamic(this, &UStageSelectWidget::OnStage1_1Clicked);
 	}
-	UpdateStageStarsUI(TEXT("TutorialMap"), Tutorial_Stars);
-	UpdateStageStarsUI(TEXT("Stage1_1"), Stage1_1_Stars);
+	UpdateStageStarsUI(TEXT("Tutorial Map"), Tutorial_StarWidget);
+	UpdateStageStarsUI(TEXT("Stage1_1"), Stage1_1_StarWidget);
 }
 
 void UStageSelectWidget::OnBackToMainMenuClicked()
@@ -63,12 +64,12 @@ void UStageSelectWidget::OnStage1_1Clicked()
 	UGameplayStatics::OpenLevel(this, FName("1_1Map")); 
 }
 
-void UStageSelectWidget::UpdateStageStarsUI(FString StageName, UTextBlock* StarTextBlock)
+void UStageSelectWidget::UpdateStageStarsUI(FString StageName, UStarWidget* StarWidget)
 {
-	// [탐정 1번] C++ 코드가 블루프린트 UI(텍스트 블록)를 제대로 찾았는지 검사!
-	if (!StarTextBlock) 
+	// [탐정 1번] 별 위젯이 제대로 바인딩 되었는지 검사
+	if (!StarWidget) 
 	{
-		UE_LOG(LogTemp, Error, TEXT("====> [UI 에러] %s 스테이지의 TextBlock이 끊어져 있습니다! WBP에서 이름과 'Is Variable' 체크를 확인하세요!"), *StageName);
+		UE_LOG(LogTemp, Error, TEXT("====> [UI 에러] %s 스테이지의 StarWidget이 연결되지 않았습니다!"), *StageName);
 		return;
 	}
     
@@ -78,13 +79,13 @@ void UStageSelectWidget::UpdateStageStarsUI(FString StageName, UTextBlock* StarT
 	// 해당 스테이지의 클리어 별 개수 가져오기 (0 ~ 3)
 	int32 EarnedStars = MyGI->GetStageClearStars(StageName);
 
-	// [탐정 2번] 게임 인스턴스가 하드디스크에서 별을 몇 개나 가져왔는지 검사!
-	UE_LOG(LogTemp, Warning, TEXT("====> [UI 로드 완료] %s 스테이지에서 꺼내온 별 개수: %d 개"), *StageName, EarnedStars);
+	// [탐정 2번] 로그 확인
+	UE_LOG(LogTemp, Warning, TEXT("====> [별 로드] %s : %d 개"), *StageName, EarnedStars);
 
-	FString StarText = TEXT("☆☆☆");
-	if (EarnedStars == 1) StarText = TEXT("★☆☆");
-	else if (EarnedStars == 2) StarText = TEXT("★★☆");
-	else if (EarnedStars >= 3) StarText = TEXT("★★★");
-    
-	StarTextBlock->SetText(FText::FromString(StarText));
+	// [핵심 변경] 텍스트 대신 별 위젯의 이미지/애니메이션 로직 호출
+	// 스테이지 선택창이므로 애니메이션 없이(false) 즉시 채워진 상태로 보여줍니다.
+	StarWidget->UpdateStars(EarnedStars, false);
 }
+
+
+
