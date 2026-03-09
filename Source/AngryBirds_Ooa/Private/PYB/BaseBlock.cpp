@@ -32,7 +32,7 @@ void ABaseBlock::BeginPlay()
 	Super::BeginPlay();
 	
 	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ABaseBlock::EnableHitDamage, 0.2f, false);
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ABaseBlock::EnableHitDamage, 5.0f, false);
 	
 	UMaterialInterface* BaseMaterial = bodyMeshComp->GetMaterial(0);
 	if (BaseMaterial)
@@ -52,11 +52,12 @@ void ABaseBlock::EnableHitDamage()
 void ABaseBlock::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	// FVector GravityForce = FVector(0.f, 0.f, -2000.f);
-         
-	// // 세 번째 인자 true: 질량(Mass)을 무시하고 가속도로 적용 (Force 대신 Accel)
-	// bodyMeshComp->AddForce(GravityForce, NAME_None, true);
+	
+	if (GetVelocity().Size() > 0)
+	{
+		FVector GravityForce = FVector(0.f, 0.f, -2000.f);
+		bodyMeshComp->AddForce(GravityForce, NAME_None, true);
+	}
 }
 
 float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
@@ -142,5 +143,13 @@ void ABaseBlock::BeforeBlockDestory()
 	}
 	
 	OnScoreChanged.Broadcast(BlockPrice);
+		
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([this]()
+	{
+		// 여기에 Delay 이후의 로직 작성
+		Destroy(); 
+	}), 0.01f, false);
+	
 	UE_LOG(LogTemp, Warning, TEXT("파괴 %s"), *GetName());
 }
