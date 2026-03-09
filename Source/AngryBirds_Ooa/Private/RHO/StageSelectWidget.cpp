@@ -60,7 +60,7 @@ void UStageSelectWidget::OnTutorialClicked()
 void UStageSelectWidget::OnStage1_1Clicked()
 {
 	if (BGMComponent) BGMComponent->Stop();
-	UGameplayStatics::OpenLevel(this, FName("TutorialMap")); 
+	UGameplayStatics::OpenLevel(this, FName("1_1Map")); 
 }
 
 void UStageSelectWidget::UpdateStageStarsUI(FString StageName, UTextBlock* StarTextBlock)
