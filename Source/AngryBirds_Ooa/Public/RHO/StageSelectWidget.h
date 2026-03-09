@@ -19,6 +19,14 @@ public:
     
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Btn_Stage1_1;
+	
+	// 클리어 별 표시를 위한 UI 요소 (예시로 텍스트로 바꿔봅시다)
+	
+	UPROPERTY(meta = (BindWidget))
+	class UStarWidget* Tutorial_StarWidget;
+
+	UPROPERTY(meta = (BindWidget))
+	class UStarWidget* Stage1_1_StarWidget;
 
 	// --- 미디어 재생을 위한 변수 ---
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Media")
@@ -33,6 +41,9 @@ public:
 
 	UPROPERTY()
 	class UAudioComponent* BGMComponent;
+	
+	
+	
 
 	virtual void NativeConstruct() override;
     
@@ -40,4 +51,6 @@ private:
 	UFUNCTION() void OnBackToMainMenuClicked();
 	UFUNCTION() void OnTutorialClicked();
 	UFUNCTION() void OnStage1_1Clicked();
+	
+	void UpdateStageStarsUI(FString StageName, class UStarWidget* StarWidget);
 };

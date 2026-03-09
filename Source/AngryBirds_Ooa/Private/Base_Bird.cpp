@@ -230,28 +230,36 @@ void ABase_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
     if (bHasHitSomething) return;
     bHasHitSomething = true;
 
-    // [추가] 충돌하면 경로 연기 생성을 중단합니다.
+    // 1. 트레일 중단 및 물리 설정
     GetWorldTimerManager().ClearTimer(TrailTimerHandle);
-
-    // 커스텀 물리 계산을 중단하고 엔진 물리를 활성화
     bUseCustomPhysics = false;
 
     if (BirdMesh)
     {
-        BirdMesh->SetSimulatePhysics(true); // 이제부터 엔진이 중력과 구름을 처리
-        
-        // 튕겨나가는 속도 적용
+        BirdMesh->SetSimulatePhysics(true);
         BirdMesh->SetPhysicsLinearVelocity(CustomVelocity);
-        
-        // 찰지게 구르도록 랜덤한 회전력(Spin) 추가
         FVector RandomSpin = FVector(FMath::FRandRange(-1.f, 1.f), FMath::FRandRange(-1.f, 1.f), FMath::FRandRange(-1.f, 1.f)) * 500.0f;
         BirdMesh->SetPhysicsAngularVelocityInDegrees(RandomSpin);
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("충돌 발생! 데굴데굴 모드 전환"));
+    UE_LOG(LogTemp, Warning, TEXT("충돌 발생! 서브 카메라로 전환합니다."));
 
-    // 구르는 걸 더 잘 볼 수 있게 카메라 복귀 대기 시간을 3.5초로 늘림
-    GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABase_Bird::StartCameraReturn, 3.5f, false);
+    // 2. [추가] SubCamera 태그를 가진 액터로 먼저 이동
+    APlayerController* PC = GetWorld()->GetFirstPlayerController();
+    if (PC)
+    {
+        TArray<AActor*> SubActors;
+        UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("SubCamera"), SubActors);
+        
+        if (SubActors.Num() > 0)
+        {
+            // 서브 카메라로 0.5초 동안 부드럽게 블렌딩 (즉시 전환을 원하면 0.0f)
+            PC->SetViewTargetWithBlend(SubActors[0], 0.5f, VTBlend_Cubic);
+        }
+    }
+
+    // 3. 4초 뒤에 메인 카메라로 돌아가는 함수 호출
+    GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABase_Bird::StartCameraReturn, 4.0f, false);
 }
 
 void ABase_Bird::StartCameraReturn()
@@ -259,24 +267,19 @@ void ABase_Bird::StartCameraReturn()
     APlayerController* PC = GetWorld()->GetFirstPlayerController();
     if (PC)
     {
-        // 1. 월드에서 "MainCamera" 태그를 가진 모든 액터를 찾습니다.
-        TArray<AActor*> FoundActors;
-        UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("MainCamera"), FoundActors);
+        // 월드에서 "MainCamera" 태그를 가진 액터를 찾음
+        TArray<AActor*> MainActors;
+        UGameplayStatics::GetAllActorsWithTag(GetWorld(), FName("MainCamera"), MainActors);
         
-        if (FoundActors.Num() > 0)
+        if (MainActors.Num() > 0)
         {
-            // 2. 첫 번째로 찾은 카메라 액터로 화면을 부드럽게 돌립니다.
-            PC->SetViewTargetWithBlend(FoundActors[0], 1.5f, VTBlend_Cubic);
-            UE_LOG(LogTemp, Warning, TEXT("태그로 메인 카메라를 찾았습니다!"));
-        }
-        else if (ReturnTarget)
-        {
-            // 태그로 못 찾았을 경우를 대비한 예외 처리
-            PC->SetViewTargetWithBlend(ReturnTarget, 1.5f, VTBlend_Cubic);
+            // 메인 카메라로 1.5초 동안 부드럽게 복귀
+            PC->SetViewTargetWithBlend(MainActors[0], 1.5f, VTBlend_Cubic);
+            UE_LOG(LogTemp, Warning, TEXT("메인 카메라로 복귀 중..."));
         }
     }
 
-    // 카메라 전환 중에 새가 사라지면 어색하므로 타이머를 맞춥니다.
+    // 카메라가 메인으로 돌아가는 시간(1.5초)을 고려하여 새 파괴 타이머 설정
     FTimerHandle DestroyTimerHandle;
     GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &ABase_Bird::DestroyBird, 1.6f, false);
 }

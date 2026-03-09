@@ -90,6 +90,6 @@ void UStagePlayingWidget::OnStageInfoChanged(FString NewStageInfo)
 void UStagePlayingWidget::OnBackToStageSelectClicked()
 {
 
-    UGameplayStatics::OpenLevel(this, FName("StageSelectMap")); // "StageSelectMap"은 실제 StageSelect 맵의 이름으로 변경해야 합니다.
+    UGameplayStatics::OpenLevel(this, FName("StageSelect")); // "StageSelect"은 실제 StageSelect 맵의 이름으로 변경해야 합니다.
     
 }
