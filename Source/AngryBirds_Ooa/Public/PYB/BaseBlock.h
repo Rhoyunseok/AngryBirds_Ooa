@@ -56,6 +56,9 @@ public:
 	UPROPERTY()
 	class UMaterialInstanceDynamic* DynamicMaterial;
 	
+	UPROPERTY(EditAnywhere)
+	class AAngryBirdGameState* GameState;
+	
 	// 블록 데미지 단계: 0 - 정상, 1 - 깨짐, 2 - 파괴
 	int DamageState = 0;
 	

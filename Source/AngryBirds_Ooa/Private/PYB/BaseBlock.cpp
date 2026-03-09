@@ -35,6 +35,8 @@ void ABaseBlock::BeginPlay()
 	FTimerHandle TimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ABaseBlock::EnableHitDamage, 5.0f, false);
 	
+	GameState = Cast<AAngryBirdGameState>(UGameplayStatics::GetGameState(this));
+	
 	UMaterialInterface* BaseMaterial = bodyMeshComp->GetMaterial(0);
 	if (BaseMaterial)
 	{
@@ -67,11 +69,11 @@ float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& Dama
 
 	// 블록의 HP 깎기
 	BlockHP -= ActualDamage;
-	UE_LOG(LogTemp, Warning, TEXT("BlockHP: %f, ActualDamage: %f"), BlockHP, ActualDamage);
+	// UE_LOG(LogTemp, Warning, TEXT("BlockHP: %f, ActualDamage: %f"), BlockHP, ActualDamage);
 
 	if (BlockHP > 0.0f)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("다침"));
+		// UE_LOG(LogTemp, Warning, TEXT("다침"));
 		if (DynamicMaterial)
 		{
 			DynamicMaterial->SetScalarParameterValue(FName("CrackAmount"), 0.8);
@@ -122,7 +124,7 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	if (OtherActor->IsA(ABase_Bird::StaticClass()))
 	{
 		SelectedThreshold = BirdThreshold;
-		UE_LOG(LogTemp, Log, TEXT("새..."));
+		// UE_LOG(LogTemp, Log, TEXT("새..."));
 	}
 	
 	float ImpactSpeed = FMath::Abs(OtherSpeed - this->GetVelocity().Size());
@@ -140,11 +142,10 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 
 void ABaseBlock::BeforeBlockDestory()
 {
-	AAngryBirdGameState* GameState = Cast<AAngryBirdGameState>(UGameplayStatics::GetGameState(this));
-    
 	// 2. 캐스팅에 성공했다면?
 	if (GameState)
 	{
+		// UE_LOG(LogTemp, Warning, TEXT("점수추가 %f"), BlockPrice);
 		GameState->AddScore(BlockPrice);
 	}
 	

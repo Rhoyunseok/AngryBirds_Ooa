@@ -7,6 +7,7 @@
 
 ANewTNTBlock::ANewTNTBlock()
 {
+	BlockHP = 1.0f;
 	BlockPrice = 300.0f;
 	ExplosionRadius = 500.0f * (GetActorScale3D().Size() * 3);
 }
@@ -18,6 +19,7 @@ void ANewTNTBlock::BeginPlay()
 
 void ANewTNTBlock::BeforeBlockDestory()
 {
+	Super::BeforeBlockDestory();
 	UE_LOG(LogTemp, Warning, TEXT("TNT 펑"));
 	Explode();
 }

@@ -21,10 +21,8 @@ void APigBlock::BeginPlay()
 
 void APigBlock::BeforeBlockDestory()
 {
+	Super::BeforeBlockDestory();
 	UE_LOG(LogTemp, Warning, TEXT("PigDie"));
-    
-	// 1. 현재 월드의 GameState를 가져와서 우리가 만든 AAngryBirdGameState로 캐스팅
-	AAngryBirdGameState* GameState = Cast<AAngryBirdGameState>(UGameplayStatics::GetGameState(this));
     
 	// 2. 캐스팅에 성공했다면?
 	if (GameState)
