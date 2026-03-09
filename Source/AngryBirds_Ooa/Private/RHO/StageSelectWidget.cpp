@@ -41,7 +41,7 @@ void UStageSelectWidget::NativeConstruct()
 	{
 		Btn_Stage1_1->OnClicked.AddDynamic(this, &UStageSelectWidget::OnStage1_1Clicked);
 	}
-	UpdateStageStarsUI(TEXT("TutorialMap"), Tutorial_Stars);
+	UpdateStageStarsUI(TEXT("Tutorial Map"), Tutorial_Stars);
 	UpdateStageStarsUI(TEXT("Stage1_1"), Stage1_1_Stars);
 }
 
