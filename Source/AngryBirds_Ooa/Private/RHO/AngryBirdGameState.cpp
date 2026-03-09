@@ -113,22 +113,14 @@ void AAngryBirdGameState::CheckMatchState()
 	// 조건 1: 돼지가 0마리 이하면 승리!
 	if (RemainingPigs <= 0)
 	{
+		// 1. 중복 실행을 막기 위해 상태는 즉시 '게임 끝'으로 잠급니다.
 		bIsGameOver = true;
- 
-		int32 EarnedStars = 1; 
-		
-		UMyGameInstance* MyGI = Cast<UMyGameInstance>(GetGameInstance());
-		if (MyGI)
-		{
-			// 3. 매니저에게 "현재 스테이지 이름"과 "계산된 별 개수"를 넘겨서 저장 지시!
-			// (CurrentStageInfo는 레벨 스크립트에서 넘겨받았던 그 이름입니다!)
-			MyGI->SaveStageClearData(CurrentStageInfo, EarnedStars);
-           
-			UE_LOG(LogTemp, Warning, TEXT("[%s] 클리어! 획득한 별: %d 개 -> 하드디스크 저장 완료!"), *CurrentStageInfo, EarnedStars);
-		}
-		// ==========================================
 
-		OnGameCleared.Broadcast(); // UI에게 승리창 띄우라고 방송
+		UE_LOG(LogTemp, Warning, TEXT("모든 돼지 처치! 4초 뒤에 승리 창이 뜹니다..."));
+
+		// 2. 4.0초 뒤에 ProcessVictory 함수를 실행하라고 타이머를 맞춥니다.
+		// (4.0f를 원하는 시간으로 조절해서 건물이 무너지는 시간을 충분히 주세요!)
+		GetWorldTimerManager().SetTimer(VictoryTimerHandle, this, &AAngryBirdGameState::ProcessVictory, 4.0f, false);
 	}
 	
 	// 2
@@ -147,4 +139,19 @@ void AAngryBirdGameState::CheckMatchState()
 			UE_LOG(LogTemp, Warning, TEXT("아직 화면에 살아있는 새가 %d마리 있어서 패배 보류!"), ActiveBirdsOnField);
 		}
 	}
+}
+// 4초 뒤에 타이머에 의해 자동으로 실행되는 함수
+void AAngryBirdGameState::ProcessVictory()
+{
+	int32 EarnedStars = 1; 
+       
+	UMyGameInstance* MyGI = Cast<UMyGameInstance>(GetGameInstance());
+	if (MyGI)
+	{
+		MyGI->SaveStageClearData(CurrentStageInfo, EarnedStars);
+          
+		UE_LOG(LogTemp, Warning, TEXT("[%s] 클리어! 획득한 별: %d 개 -> 하드디스크 저장 완료!"), *CurrentStageInfo, EarnedStars);
+	}
+	
+	OnGameCleared.Broadcast(); 
 }
