@@ -130,6 +130,9 @@ private:
 	AActor* CurrentBird;
 	
 	FVector StartAimLocation;
+	
+	// 클래스 멤버 변수에 이전 파우치 위치를 기억할 수 있는 변수
+	FVector LastPouchLocation;
 protected:
 	// 새가 장전되어 있고 조준 가능한 상태인지 확인하는 변수
 	bool bCanAim = true;           // 조준 가능 상태 플래그

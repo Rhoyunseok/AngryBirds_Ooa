@@ -38,8 +38,8 @@ void UMyGameInstance::SaveGame()
     if (CurrentSaveData)
     {
         // 바구니의 내용을 하드디스크에 물리적으로 덮어씌워서 저장!
-        UGameplayStatics::SaveGameToSlot(CurrentSaveData, SaveSlotName, 0);
-        UE_LOG(LogTemp, Warning, TEXT("게임 진행 상황이 저장되었습니다!"));
+        UGameplayStatics::AsyncSaveGameToSlot(CurrentSaveData, SaveSlotName, 0); // 비동기 형식으로 저장
+        UE_LOG(LogTemp, Warning, TEXT("게임 진행 상황이 비동기로 저장되었습니다!"));
     }
 }
 
