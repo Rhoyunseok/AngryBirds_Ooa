@@ -138,4 +138,7 @@ protected:
 	bool bCanAim = true;           // 조준 가능 상태 플래그
 	FTimerHandle ReloadTimerHandle; // 재장전용 타이머 핸들
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State")
+	bool bIsLoaded = false; // 새가 장전되어 있는지 여부
+	
 };

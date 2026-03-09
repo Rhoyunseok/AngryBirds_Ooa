@@ -274,19 +274,21 @@ void ASlingShot::LoadBird()
         //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("GameState에서 새를 받아 스폰 성공!"));
         CurrentBird->AttachToComponent(Pouch, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("LaunchPouch"));
         CurrentBird->SetActorRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
+        
+        bIsLoaded = true;
     }
 }
 
 void ASlingShot::FireBird()
 {
-    if (!CurrentBird) return;
+    if (!CurrentBird||!bIsLoaded) return;
     
     
     // 발사체(새)가 새총 몸체나 파우치에 걸리지 않도록 설정
     CurrentBird->SetActorEnableCollision(true); // 새의 충돌 활성화
     this->SetActorEnableCollision(false); // 새총의 충돌 비활성화
     // ------------------
-    
+    bIsLoaded = false;
 
     UE_LOG(LogTemp,Warning, TEXT("FireBird 함수 실행!")); 
     CurrentBird->GetRootComponent()->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
@@ -320,6 +322,7 @@ void ASlingShot::FireBird()
 // 마우스 클릭을 하면 실행 되는 함수
 void ASlingShot::PullString()
 {
+    if (!bIsLoaded)return;
     bIsAiming = true;
     PullPower = 5.0f;
     if (Pouch)
@@ -364,6 +367,7 @@ void ASlingShot::PullString()
 
 void ASlingShot::ReleaseString()
 {
+    if (!bIsLoaded) return;
     bIsAiming = false; 
     FireBird();
     ClearTrajectory();
@@ -422,6 +426,9 @@ void ASlingShot::DrawTrajectory()
     PredictParams.MaxSimTime = 3.0f;               // 몇 초 뒤의 미래까지 그릴지 (길이 조절)
     PredictParams.SimFrequency = 15.0f;            // 점의 간격 (숫자가 클수록 촘촘해짐)
     PredictParams.OverrideGravityZ = -980.0f;      // 중력 덮어쓰기
+    
+    TrajectoryISMC->SetCollisionEnabled(ECollisionEnabled::NoCollision); 
+    TrajectoryISMC->SetGenerateOverlapEvents(false);
 
     // ★ [핵심 수정 1] 예측선이 새총이나 새에 닿아서 즉시 끊기는 현상 방지
     PredictParams.ActorsToIgnore.Add(this);
