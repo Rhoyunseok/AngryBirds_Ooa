@@ -4,23 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "PYB/BaseBlock.h"
-#include "RockBlock.generated.h"
+#include "WoodBlock.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class ANGRYBIRDS_OOA_API ARockBlock : public ABaseBlock
+class ANGRYBIRDS_OOA_API AWoodBlock : public ABaseBlock
 {
 	GENERATED_BODY()
 	
 public:
-	ARockBlock();
+	AWoodBlock();
 	
 	UPROPERTY(EditAnywhere)
-	float VSSpeedVal = 0.5f;
+	float VSSpeedVal = 1.5f;
 	UPROPERTY(EditAnywhere)
-	float VSBombVal = 2.0f;
+	float VSBombVal = 0.5f;
 	
 	virtual void CalBirdDamage() override;
 };

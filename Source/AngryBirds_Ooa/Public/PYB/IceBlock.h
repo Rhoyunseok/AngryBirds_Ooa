@@ -17,4 +17,10 @@ class ANGRYBIRDS_OOA_API AIceBlock : public ABaseBlock
 public:
 	AIceBlock();
 	
+	UPROPERTY(EditAnywhere)
+	float VSSpeedVal = 1.0f;
+	UPROPERTY(EditAnywhere)
+	float VSBombVal = 0.5f;
+	
+	virtual void CalBirdDamage() override;
 };

@@ -113,7 +113,7 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	
 	if (HitComponent->IsSimulatingPhysics())
 	{
-		ABase_Bird* Bird = Cast<ABase_Bird>(OtherActor);
+		Bird = Cast<ABase_Bird>(OtherActor);
 		if (Bird)
 		{
 			OtherSpeed= Bird->CustomVelocity.Size();
@@ -133,11 +133,21 @@ void ABaseBlock::OnBlockHit(UPrimitiveComponent* HitComponent, AActor* OtherActo
 	
 	if (ImpactSpeed > SelectedThreshold)
 	{
-		float CalculatedDamage = 50 + (ImpactSpeed - SelectedThreshold) / 10;
+		CalculatedDamage = 50 + (ImpactSpeed - SelectedThreshold) / 10;
+		if (SelectedThreshold == BirdThreshold)
+		{
+			CalBirdDamage();
+		}
 
 		// 나 자신에게 데미지를 입힘 (내가 부딪혀서 아픔)
 		UGameplayStatics::ApplyDamage(this, CalculatedDamage, nullptr, OtherActor, UDamageType::StaticClass());
 	}
+}
+
+
+void ABaseBlock::CalBirdDamage()
+{
+	CalculatedDamage *= 1;
 }
 
 void ABaseBlock::BeforeBlockDestory()

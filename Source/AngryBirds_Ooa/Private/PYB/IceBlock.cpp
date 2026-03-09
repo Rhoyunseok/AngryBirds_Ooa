@@ -3,6 +3,9 @@
 
 #include "PYB/IceBlock.h"
 
+#include "Bomb_Bird.h"
+#include "Speed_Bird.h"
+
 AIceBlock::AIceBlock()
 {
 	if (bodyMeshComp)
@@ -16,5 +19,20 @@ AIceBlock::AIceBlock()
 		{
 			bodyMeshComp->SetMaterial(0, IceMat.Object);
 		}
+	}
+}
+
+void AIceBlock::CalBirdDamage()
+{
+	Super::CalBirdDamage();
+	if (Bird->IsA(ASpeed_Bird::StaticClass()))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Bird is a Speed_Bird"));
+		CalculatedDamage *= VSSpeedVal;
+	}
+	else if (Bird->IsA(ABomb_Bird::StaticClass()))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Bird is a Bomb_Bird"));
+		CalculatedDamage *= VSBombVal;
 	}
 }

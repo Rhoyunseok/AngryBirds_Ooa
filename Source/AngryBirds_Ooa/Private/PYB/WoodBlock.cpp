@@ -1,28 +1,29 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PYB/RockBlock.h"
+#include "PYB/WoodBlock.h"
 
+#include "Base_Bird.h"
 #include "Bomb_Bird.h"
 #include "Speed_Bird.h"
 
-ARockBlock::ARockBlock()
+AWoodBlock::AWoodBlock()
 {
 	if (bodyMeshComp)
 	{
 		bodyMeshComp->SetLinearDamping(0.1f);
 		bodyMeshComp->SetAngularDamping(0.5f);
-		bodyMeshComp->GetBodyInstance()->SetMassOverride(200.0f);
+		bodyMeshComp->GetBodyInstance()->SetMassOverride(100.0f);
 		
-		ConstructorHelpers::FObjectFinder<UMaterial> RockMat(TEXT("/Script/Engine.Material'/Game/PYB/Materials/Mat_Rock.Mat_Rock'"));
-		if (RockMat.Succeeded())
+		ConstructorHelpers::FObjectFinder<UMaterial> WoodMat(TEXT("/Script/Engine.Material'/Game/PYB/Materials/Mat_Wood.Mat_Wood''"));
+		if (WoodMat.Succeeded())
 		{
-			bodyMeshComp->SetMaterial(0, RockMat.Object);
+			bodyMeshComp->SetMaterial(0, WoodMat.Object);
 		}
 	}
 }
 
-void ARockBlock::CalBirdDamage()
+void AWoodBlock::CalBirdDamage()
 {
 	Super::CalBirdDamage();
 	if (Bird->IsA(ASpeed_Bird::StaticClass()))

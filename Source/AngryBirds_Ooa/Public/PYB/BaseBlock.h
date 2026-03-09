@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Base_Bird.h"
 #include "GameFramework/Actor.h"
 #include "BaseBlock.generated.h"
 
@@ -61,7 +62,10 @@ public:
 	
 	// 블록 데미지 단계: 0 - 정상, 1 - 깨짐, 2 - 파괴
 	int DamageState = 0;
+	float CalculatedDamage = 0.0f;
+	ABase_Bird* Bird;
 	
+	virtual void CalBirdDamage();
 	virtual void BeforeBlockDestory();
 	
 	FOnScoreChangedSignature OnScoreChanged;
