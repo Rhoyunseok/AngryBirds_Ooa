@@ -18,6 +18,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	void OnUseAbilityPressed();
 	virtual void SetupInputComponent() override;
 
 	// 조작 함수들

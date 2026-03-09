@@ -74,11 +74,11 @@ void ASlingShot::Tick(float DeltaTime)
        Pouch->SetRelativeLocation(NewLoc);
        UpdateBands();
        
-       if (GetWorld()->GetFirstPlayerController()->IsInputKeyDown(EKeys::Q))
-       {
-          TriggerBirdAbility();
-          CurrentBird = nullptr; 
-       }
+       // if (GetWorld()->GetFirstPlayerController()->IsInputKeyDown(EKeys::Q))
+       // {
+       //    TriggerBirdAbility();
+       //    CurrentBird = nullptr; 
+       // }
     }
 }
 
@@ -157,20 +157,12 @@ void ASlingShot::UpdateAim(APlayerController* PlayerController)
             // 발사 벡터 = 원점 - 현재위치 (뒤로 당길수록 앞을 향함)
             FVector LaunchVec = OriginLocation - CurrentPouchLoc;
 
-            if (!LaunchVec.IsNearlyZero())
+            if (FVector::Dist(LastPouchLocation, Pouch->GetComponentLocation()) > 2.0f)
             {
-                // 벡터를 회전값으로 변환
-                FRotator TargetRot = LaunchVec.Rotation();
-
-                // 만약 새 모델 에셋이 기본적으로 옆을 보고 있다면(예: -90도) 보정값을 더해줍니다.
-                // TargetRot.Yaw -= 90.0f; 
-
-                // 새의 월드 회전값을 발사 방향으로 즉시 업데이트
-                // 이 때 SpringArm이 BirdMesh에 붙어 있으므로 카메라도 같이 회전합니다.
-                CurrentBird->SetActorRotation(TargetRot);
+                DrawTrajectory();
+                LastPouchLocation = Pouch->GetComponentLocation(); // 현재 위치를 기억해둠
             }
         }
-        DrawTrajectory();
     }
     
     
@@ -278,6 +270,7 @@ void ASlingShot::LoadBird()
 
     if (CurrentBird)
     {
+        GameState->ActiveBirdsOnField++; // 새가 스폰될 때마다 카운트 증가
         //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("GameState에서 새를 받아 스폰 성공!"));
         CurrentBird->AttachToComponent(Pouch, FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("LaunchPouch"));
         CurrentBird->SetActorRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));

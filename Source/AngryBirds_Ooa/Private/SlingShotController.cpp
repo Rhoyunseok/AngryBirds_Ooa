@@ -43,6 +43,7 @@ void ASlingShotController::SetupInputComponent()
 		InputComponent->BindAction("Fire", IE_Pressed, this, &ASlingShotController::StartAiming).bConsumeInput = false;
 		InputComponent->BindAction("Fire", IE_Released, this, &ASlingShotController::StopAiming).bConsumeInput = false;
 		InputComponent->BindAxis("MouseWheel", this, &ASlingShotController::AdjustPower);
+		InputComponent->BindAction("UseAbility", IE_Pressed, this, &ASlingShotController::OnUseAbilityPressed);
 	}
 }
 
@@ -84,5 +85,12 @@ void ASlingShotController::StopAiming()
        
 		// 3. 파우치가 돌아오는 애니메이션을 위해 설정
 		CurrentSlingshot->bIsReturning = true;
+	}
+}
+void ASlingShotController::OnUseAbilityPressed()
+{
+	if (CurrentSlingshot)
+	{
+		CurrentSlingshot->TriggerBirdAbility();
 	}
 }
