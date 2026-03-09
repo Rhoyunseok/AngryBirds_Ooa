@@ -19,8 +19,9 @@ ABaseBlock::ABaseBlock()
 	bodyMeshComp->SetCollisionProfileName(TEXT("BlockAll"));
 	bodyMeshComp->SetNotifyRigidBodyCollision(true);
 	bodyMeshComp->SetSimulatePhysics(true);
-	bodyMeshComp->SetLinearDamping(0.0f);
-	bodyMeshComp->SetAngularDamping(0.0f);
+	bodyMeshComp->SetLinearDamping(0.1f);
+	bodyMeshComp->SetAngularDamping(0.5f);
+	bodyMeshComp->BodyInstance.SleepFamily = ESleepFamily::Sensitive;
 	
 	bodyMeshComp->GetBodyInstance()->bOverrideMass = true;
 	bodyMeshComp->GetBodyInstance()->SetMassOverride(100.0f);
@@ -80,11 +81,16 @@ float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& Dama
 		}
 		DamageState = 1;
 	}
-	else
+	else if (DamageState != 2)
 	{
 		DamageState = 2;
 		BeforeBlockDestory();
-		this->Destroy();
+		FTimerHandle TimerHandle;
+		GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([this]()
+		{
+			// 여기에 Delay 이후의 로직 작성
+			this->Destroy(); 
+		}), 0.01f, false);
 	}
 	
 	return ActualDamage;
@@ -143,13 +149,6 @@ void ABaseBlock::BeforeBlockDestory()
 	}
 	
 	OnScoreChanged.Broadcast(BlockPrice);
-		
-	FTimerHandle TimerHandle;
-	GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([this]()
-	{
-		// 여기에 Delay 이후의 로직 작성
-		Destroy(); 
-	}), 0.01f, false);
 	
 	UE_LOG(LogTemp, Warning, TEXT("파괴 %s"), *GetName());
 }

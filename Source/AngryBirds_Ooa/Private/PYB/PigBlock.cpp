@@ -21,7 +21,6 @@ void APigBlock::BeginPlay()
 
 void APigBlock::BeforeBlockDestory()
 {
-	Super::BeforeBlockDestory();
 	UE_LOG(LogTemp, Warning, TEXT("PigDie"));
     
 	// 1. 현재 월드의 GameState를 가져와서 우리가 만든 AAngryBirdGameState로 캐스팅
