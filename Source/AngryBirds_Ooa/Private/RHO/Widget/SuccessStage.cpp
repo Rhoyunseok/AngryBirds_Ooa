@@ -44,5 +44,5 @@ void USuccessStage::OnNextStageClicked()
 
 void USuccessStage::OnStageSelectClicked()
 {
-	UGameplayStatics::OpenLevel(this, FName("StageSelectMap")); 
+	UGameplayStatics::OpenLevel(this, FName("StageSelect")); 
 }
