@@ -12,7 +12,7 @@
 #include "RHO/AngryBirdGameState.h"
 
 ABase_Bird::ABase_Bird()
-{
+{ 
     PrimaryActorTick.bCanEverTick = true;
 
     RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
