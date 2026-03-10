@@ -108,6 +108,11 @@ protected:
 
     // 연기를 주기적으로 생성하기 위한 타이머
     FTimerHandle TrailTimerHandle;
+    
+    //새의 무게 변수: 에디터 디테일 패널 및 블루프린트에서 접근 가능
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bird|Stats")
+    float BirdWeight = 10.0f;
+    
 public:    
     // 연기를 실제로 스폰하는 함수
     void SpawnTrail();

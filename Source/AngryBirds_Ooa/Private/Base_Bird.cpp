@@ -54,6 +54,10 @@ ABase_Bird::ABase_Bird()
 
     CollisionSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     CollisionSphere->SetCollisionResponseToAllChannels(ECR_Block);
+    
+    // 기본 무게 초기화
+    BirdWeight = 10.0f;
+    
 }
 
 void ABase_Bird::BeginPlay()
@@ -166,6 +170,11 @@ void ABase_Bird::Tick(float DeltaTime)
 void ABase_Bird::HandleCustomPhysics(float DeltaTime)
 {
     FVector CurrentLocation = GetActorLocation();
+    // 무게에 따른 중력 가속도 계산
+    // 기준 무게를 10.0으로 잡고, 무거울수록(20.0) 더 빨리 떨어지게 설정합니다.
+    // 무게가 20이면 중력을 2배(2.0)로 받고, 8이면 0.8배로 받습니다.
+    float GravityScale = BirdWeight / 10.0f;
+    
     CustomVelocity += GravityConstant * DeltaTime;
     FVector NextLocation = CurrentLocation + (CustomVelocity * DeltaTime);
 
@@ -236,6 +245,9 @@ void ABase_Bird::OnBirdHit(UPrimitiveComponent* HitComponent, AActor* OtherActor
 
     if (BirdMesh)
     {
+        // [추가] 물리 엔진의 질량(Mass)을 우리가 설정한 변수값으로 강제 적용
+        BirdMesh->SetMassOverrideInKg(NAME_None, BirdWeight, true);
+        
         BirdMesh->SetSimulatePhysics(true);
         BirdMesh->SetPhysicsLinearVelocity(CustomVelocity);
         FVector RandomSpin = FVector(FMath::FRandRange(-1.f, 1.f), FMath::FRandRange(-1.f, 1.f), FMath::FRandRange(-1.f, 1.f)) * 500.0f;
