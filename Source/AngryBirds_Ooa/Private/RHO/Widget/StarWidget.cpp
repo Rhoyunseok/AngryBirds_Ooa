@@ -4,26 +4,40 @@
 
 void UStarWidget::UpdateStars(int32 StarCount, bool bAnimate)
 {
-	if (StarCount == CurrentDisplayedStars) return;
+	// 1. 일단 모든 별을 연하게(0.2) 초기화
+	if (Star_1) Star_1->SetRenderOpacity(0.2f);
+	if (Star_2) Star_2->SetRenderOpacity(0.2f);
+	if (Star_3) Star_3->SetRenderOpacity(0.2f);
 
-	// 기본 투명도 설정 (연한 상태)
-	auto SetInitialOpacity = [this](int32 Count) {
-		if (Star_1) Star_1->SetRenderOpacity(Count >= 1 ? 1.0f : 0.2f);
-		if (Star_2) Star_2->SetRenderOpacity(Count >= 2 ? 1.0f : 0.2f);
-		if (Star_3) Star_3->SetRenderOpacity(Count >= 3 ? 1.0f : 0.2f);
-	};
+	if (StarCount <= 0) return;
 
 	if (bAnimate)
 	{
-		// 새로 채워져야 할 별들에 대해서만 애니메이션 재생
-		if (StarCount >= 1 && CurrentDisplayedStars < 1 && FillStar1Anim) PlayAnimation(FillStar1Anim);
-		if (StarCount >= 2 && CurrentDisplayedStars < 2 && FillStar2Anim) PlayAnimation(FillStar2Anim);
-		if (StarCount >= 3 && CurrentDisplayedStars < 3 && FillStar3Anim) PlayAnimation(FillStar3Anim);
+		// 2. 애니메이션 실행 및 '최종 상태' 강제 고정
+		// PlayAnimation을 호출해도, 코드에서 직접 Opacity를 1.0으로 박아버리면 
+		// 애니메이션이 끝나고 흐려지는 현상을 막을 수 있습니다.
+		if (StarCount >= 1 && FillStar1Anim) 
+		{
+			PlayAnimation(FillStar1Anim);
+			Star_1->SetRenderOpacity(1.0f); 
+		}
+		if (StarCount >= 2 && FillStar2Anim) 
+		{
+			PlayAnimation(FillStar2Anim);
+			Star_2->SetRenderOpacity(1.0f);
+		}
+		if (StarCount >= 3 && FillStar3Anim) 
+		{
+			PlayAnimation(FillStar3Anim);
+			Star_3->SetRenderOpacity(1.0f);
+		}
 	}
 	else
 	{
-		// 애니메이션 없이 즉시 투명도만 조절 (스테이지 선택창용)
-		SetInitialOpacity(StarCount);
+		// 애니메이션 없이 즉시 표시
+		if (Star_1) Star_1->SetRenderOpacity(StarCount >= 1 ? 1.0f : 0.2f);
+		if (Star_2) Star_2->SetRenderOpacity(StarCount >= 2 ? 1.0f : 0.2f);
+		if (Star_3) Star_3->SetRenderOpacity(StarCount >= 3 ? 1.0f : 0.2f);
 	}
 
 	CurrentDisplayedStars = StarCount;
