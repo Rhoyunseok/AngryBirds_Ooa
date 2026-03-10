@@ -1,27 +1,26 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "SuccessStage.generated.h"
 
-
 class UButton;
-class UTextBlock; // 글씨를 띄울 텍스트 블록
+class UTextBlock;
 
-/**
- * 
- */
 UCLASS()
 class ANGRYBIRDS_OOA_API USuccessStage : public UUserWidget
 {
 	GENERATED_BODY()
+
 protected:
 	virtual void NativeConstruct() override;
 
+	// --- 위젯 바인딩 ---
 	UPROPERTY(meta = (BindWidget))
 	UButton* Btn_NextStage;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* Btn_Restart; // 추가됨
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* Btn_StageSelect;
@@ -30,16 +29,20 @@ protected:
 	UTextBlock* Txt_Score;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* Txt_Stars; 
+	UTextBlock* Txt_Stars;
 
-	
+	// --- 설정 변수 ---
+	// 요청하신 대로 Stage1_1로 기본값 변경
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level")
-	FName NextLevelName = "MapRho"; 
-	
+	FName NextLevelName = TEXT("Stage1_1");
+
+	// --- 버튼 클릭 핸들러 ---
 	UFUNCTION()
 	void OnNextStageClicked();
 
 	UFUNCTION()
+	void OnRestartClicked(); // 추가됨
+
+	UFUNCTION()
 	void OnStageSelectClicked();
-	
 };
