@@ -30,7 +30,10 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Txt_Stars;
-
+	
+	UPROPERTY(meta = (BindWidget))
+	class UStarWidget* WBP_StarWidget;
+	
 	// --- 설정 변수 ---
 	// 요청하신 대로 Stage1_1로 기본값 변경
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level")
