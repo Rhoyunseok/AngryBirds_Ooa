@@ -15,30 +15,26 @@ void USuccessStage::NativeConstruct()
 	if (Btn_StageSelect) Btn_StageSelect->OnClicked.AddDynamic(this, &USuccessStage::OnStageSelectClicked);
 
 	// 점수 및 별점 표시 로직
-	AAngryBirdGameState* GameState = Cast<AAngryBirdGameState>(UGameplayStatics::GetGameState(this));
+	AAngryBirdGameState* GameState = Cast<AAngryBirdGameState>(UGameplayStatics::GetGameState(this)); // 게임 상태에서 점수와 별 개수를 가져옵니다.
 	if (GameState)
 	{
 		int32 MyScore = GameState->GetCurrentScore();
-		
-		// GameState에 별 개수를 계산하는 함수가 있다면 호출하세요. 
-		// 여기서는 예시로 점수에 따라 별을 설정합니다.
-		int32 MyStars = 0;
-		if (MyScore >= 3000) MyStars = 3;
-		else if (MyScore >= 1500) MyStars = 2;
-		else MyStars = 1;
+		int32 MyStars = GameState->GetCurrentStars();
 
 		// 텍스트 업데이트
 		if (Txt_Score)
 			Txt_Score->SetText(FText::Format(NSLOCTEXT("UI", "ScoreText", "SCORE : {0}"), FText::AsNumber(MyScore)));
-
 		if (Txt_Stars)
 			Txt_Stars->SetText(FText::Format(NSLOCTEXT("UI", "StarsText", "STARS : {0}"), FText::AsNumber(MyStars)));
-
-		// ★ 스타 위젯 업데이트 실행 ★
-		if (WBP_StarWidget)
-		{
-			WBP_StarWidget->UpdateStars(MyStars, true);
-		}
+		 if (WBP_StarWidget)
+		 {
+		 	// 몇초 뒤에 별이 채워지는 애니메이션이 실행되도록 타이머 설정
+		 	FTimerHandle StarAnimTimerHandle;
+		 	GetWorld()->GetTimerManager().SetTimer(StarAnimTimerHandle, [this, MyStars]()
+		 	{
+		 		WBP_StarWidget->UpdateStars(MyStars, true);
+		 	}, 1.0f, false); // 1초 뒤에 실행, 반복 안함
+		 }
 	}
 }
 

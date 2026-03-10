@@ -61,7 +61,7 @@ void UMyGameInstance::SaveStageClearData(FString StageName, int32 Stars)
         if (Stars > OldStars)
         {
             CurrentSaveData->StageClearRecords[StageName] = Stars;
-            SaveGame(); // 갱신했으니 하드디스크에 저장
+            SaveGame();
         }
     }
     else
