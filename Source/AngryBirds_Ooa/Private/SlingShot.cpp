@@ -423,8 +423,8 @@ void ASlingShot::DrawTrajectory()
     PredictParams.bTraceWithCollision = true;      // 벽에 닿으면 궤적 끊기
     PredictParams.bTraceWithChannel = true;
     PredictParams.TraceChannel = ECC_WorldStatic;  // 지형지물 채널
-    PredictParams.MaxSimTime = 3.0f;               // 몇 초 뒤의 미래까지 그릴지 (길이 조절)
-    PredictParams.SimFrequency = 15.0f;            // 점의 간격 (숫자가 클수록 촘촘해짐)
+    PredictParams.MaxSimTime = 4.0f;               // 몇 초 뒤의 미래까지 그릴지 (길이 조절)
+    PredictParams.SimFrequency = 45.0f;            // 점의 간격 (숫자가 클수록 촘촘해짐)
     PredictParams.OverrideGravityZ = -980.0f;      // 중력 덮어쓰기
     
     TrajectoryISMC->SetCollisionEnabled(ECollisionEnabled::NoCollision); 
@@ -436,9 +436,7 @@ void ASlingShot::DrawTrajectory()
     {
         PredictParams.ActorsToIgnore.Add(CurrentBird);
     }
-
-    // (테스트용) 여전히 점이 안 보인다면 아래 주석을 풀어서 초록색 디버그 선이 나오는지부터 확인하세요!
-    // PredictParams.DrawDebugType = EDrawDebugTrace::ForOneFrame;
+    
 
     // 4. 경로 예측 실행
     FPredictProjectilePathResult PredictResult;
