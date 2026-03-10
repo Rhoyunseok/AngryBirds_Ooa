@@ -9,17 +9,28 @@
 
 AWoodBlock::AWoodBlock()
 {
+	BaseDamage = 30.0f;
 	if (bodyMeshComp)
 	{
 		bodyMeshComp->SetLinearDamping(0.1f);
 		bodyMeshComp->SetAngularDamping(0.5f);
 		bodyMeshComp->GetBodyInstance()->SetMassOverride(100.0f);
 		
-		ConstructorHelpers::FObjectFinder<UMaterial> WoodMat(TEXT("/Script/Engine.Material'/Game/PYB/Materials/Mat_Wood.Mat_Wood''"));
+		ConstructorHelpers::FObjectFinder<UMaterial> WoodMat(TEXT("/Script/Engine.Material'/Game/PYB/Materials/Mat_Wood.Mat_Wood'"));
 		if (WoodMat.Succeeded())
 		{
 			bodyMeshComp->SetMaterial(0, WoodMat.Object);
 		}
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> tempHitSound(TEXT("/Script/Engine.SoundWave'/Game/PYB/Sounds/wood_hit.wood_hit'"));
+	if (tempHitSound.Succeeded())
+	{
+		HitSound = tempHitSound.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> tempBreakSound(TEXT("/Script/Engine.SoundWave'/Game/PYB/Sounds/wood_broke.wood_broke'"));
+	if (tempBreakSound.Succeeded())
+	{
+		BreakSound = tempBreakSound.Object;
 	}
 }
 

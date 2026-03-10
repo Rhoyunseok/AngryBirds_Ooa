@@ -8,6 +8,7 @@
 ANewTNTBlock::ANewTNTBlock()
 {
 	BlockHP = 1.0f;
+	BlockThreshold = 200.0f;
 	BlockPrice = 300.0f;
 	ExplosionRadius = 500.0f * (GetActorScale3D().Size() * 3);
 }
@@ -26,11 +27,11 @@ void ANewTNTBlock::BeforeBlockDestory()
 
 void ANewTNTBlock::Explode()
 {
-	FVector ExplodeLocation = bodyMeshComp->GetComponentLocation();
+	FVector ExplodeLocation = GetActorLocation();
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(this);
 	
-	DrawDebugSphere(GetWorld(), ExplodeLocation, ExplosionRadius, 32, FColor::Red, false, 2.0f, 0, 2.0f);
+	DrawDebugSphere(GetWorld(), ExplodeLocation, ExplosionRadius, 32, FColor::Red, false, 0.5f, 0, 2.0f);
 
 	// 2. 360도 범위 물리 충격
 	TArray<FHitResult> OutHits;

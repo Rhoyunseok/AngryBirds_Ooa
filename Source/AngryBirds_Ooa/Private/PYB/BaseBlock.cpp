@@ -25,6 +25,17 @@ ABaseBlock::ABaseBlock()
 	
 	bodyMeshComp->GetBodyInstance()->bOverrideMass = true;
 	bodyMeshComp->GetBodyInstance()->SetMassOverride(100.0f);
+	
+	ConstructorHelpers::FObjectFinder<USoundBase> tempHitSound(TEXT("/Script/Engine.SoundWave'/Game/PYB/Sounds/wood_hit.wood_hit'"));
+	if (tempHitSound.Succeeded())
+	{
+		HitSound = tempHitSound.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> tempBreakSound(TEXT("/Script/Engine.SoundWave'/Game/PYB/Sounds/wood_broke.wood_broke'"));
+	if (tempBreakSound.Succeeded())
+	{
+		BreakSound = tempBreakSound.Object;
+	}
 }
 
 // Called when the game starts or when spawned
@@ -81,18 +92,47 @@ float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& Dama
 			// DynamicMaterial->GetScalarParameterValue(FName("CrackAmount"), temp);
 			// UE_LOG(LogTemp, Warning, TEXT("BlockHP: %f, DynamicMat: %s"), temp, *DynamicMaterial->GetName());
 		}
-		DamageState = 1;
+		if (DamageState == 0)
+		{
+			DamageState = 1;
+			if (HitSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(
+					GetWorld(),
+					HitSound,
+					GetActorLocation(),
+					1.0f,
+					1.0f,
+					0.0f,
+					nullptr,
+					nullptr
+					);
+			}
+		}
 	}
 	else if (DamageState != 2)
 	{
 		DamageState = 2;
+		if (BreakSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				GetWorld(),
+				HitSound,
+				GetActorLocation(),
+				1.0f,
+				1.0f,
+				0.0f,
+				nullptr,
+				nullptr
+				);
+		}
 		BeforeBlockDestory();
 		FTimerHandle TimerHandle;
 		GetWorldTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateLambda([this]()
 		{
 			// 여기에 Delay 이후의 로직 작성
 			this->Destroy(); 
-		}), 0.01f, false);
+		}), 0.05f, false);
 	}
 	
 	return ActualDamage;

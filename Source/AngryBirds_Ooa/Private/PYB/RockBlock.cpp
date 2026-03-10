@@ -8,6 +8,7 @@
 
 ARockBlock::ARockBlock()
 {
+	BaseDamage = 10.0f;
 	if (bodyMeshComp)
 	{
 		bodyMeshComp->SetLinearDamping(0.1f);
@@ -19,6 +20,16 @@ ARockBlock::ARockBlock()
 		{
 			bodyMeshComp->SetMaterial(0, RockMat.Object);
 		}
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> tempHitSound(TEXT("/Script/Engine.SoundWave'/Game/PYB/Sounds/stone_hit.stone_hit'"));
+	if (tempHitSound.Succeeded())
+	{
+		HitSound = tempHitSound.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> tempBreakSound(TEXT("/Script/Engine.SoundWave'/Game/PYB/Sounds/stone_broke.stone_broke'"));
+	if (tempBreakSound.Succeeded())
+	{
+		BreakSound = tempBreakSound.Object;
 	}
 }
 

@@ -8,6 +8,7 @@
 
 AIceBlock::AIceBlock()
 {
+	BaseDamage = 50.0f;
 	if (bodyMeshComp)
 	{
 		bodyMeshComp->SetLinearDamping(0.1f);
@@ -19,6 +20,16 @@ AIceBlock::AIceBlock()
 		{
 			bodyMeshComp->SetMaterial(0, IceMat.Object);
 		}
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> tempHitSound(TEXT("/Script/Engine.SoundWave'/Game/PYB/Sounds/glass_hit.glass_hit'"));
+	if (tempHitSound.Succeeded())
+	{
+		HitSound = tempHitSound.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> tempBreakSound(TEXT("/Script/Engine.SoundWave'/Game/PYB/Sounds/glass_broke.glass_broke'"));
+	if (tempBreakSound.Succeeded())
+	{
+		BreakSound = tempBreakSound.Object;
 	}
 }
 

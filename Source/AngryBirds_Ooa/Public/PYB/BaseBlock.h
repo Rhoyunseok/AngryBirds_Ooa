@@ -63,10 +63,16 @@ public:
 	// 블록 데미지 단계: 0 - 정상, 1 - 깨짐, 2 - 파괴
 	int DamageState = 0;
 	float CalculatedDamage = 0.0f;
+	float BaseDamage = 50.0f;
 	ABase_Bird* Bird;
 	
 	virtual void CalBirdDamage();
 	virtual void BeforeBlockDestory();
+	
+	UPROPERTY(EditAnywhere)
+	USoundBase* HitSound;
+	UPROPERTY(EditAnywhere)
+	USoundBase* BreakSound;
 	
 	FOnScoreChangedSignature OnScoreChanged;
 };
