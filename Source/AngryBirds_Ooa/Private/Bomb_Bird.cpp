@@ -174,8 +174,8 @@ void ABomb_Bird::Explode()
     }
 
     // 디버그 구체
-    DrawDebugSphere(GetWorld(), ExplosionLocation, ExplosionRadius, 32, FColor::Red, false, 2.0f, 0, 1.5f);
+    //DrawDebugSphere(GetWorld(), ExplosionLocation, ExplosionRadius, 32, FColor::Red, false, 2.0f, 0, 1.5f);
 
     // 카메라 리턴 (Base_Bird의 로직 호출)
-    GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABase_Bird::StartCameraReturn, 0.5f, false);
+    GetWorldTimerManager().SetTimer(DespawnTimerHandle, this, &ABase_Bird::StartCameraReturn, 1.5f, false);
 }
