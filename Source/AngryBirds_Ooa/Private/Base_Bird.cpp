@@ -293,7 +293,7 @@ void ABase_Bird::StartCameraReturn()
 
     // 카메라가 메인으로 돌아가는 시간(1.5초)을 고려하여 새 파괴 타이머 설정
     FTimerHandle DestroyTimerHandle;
-    GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &ABase_Bird::DestroyBird, 3.6f, false);
+    GetWorldTimerManager().SetTimer(DestroyTimerHandle, this, &ABase_Bird::DestroyBird, 1.6f, false);
 }
 
 void ABase_Bird::DestroyBird()

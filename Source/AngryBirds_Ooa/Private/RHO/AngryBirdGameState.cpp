@@ -3,6 +3,7 @@
 #include "RHO/AngryBirdGameState.h"
 
 #include "Base_Bird.h"
+#include "IPlatformFilePak.h"
 #include "Kismet/GameplayStatics.h"
 #include "Rho/Save/MyGameInstance.h"
 
@@ -128,7 +129,7 @@ void AAngryBirdGameState::CheckMatchState()
 		if (ActiveBirdsOnField == 0)
 		{
 			bIsGameOver = true;
-			OnGameOver.Broadcast();
+			GetWorldTimerManager().SetTimer(VictoryTimerHandle, this, &AAngryBirdGameState::ProcessFailure, 4.0f, false);
 			UE_LOG(LogTemp, Warning, TEXT("졌어졌어졌어졌어졌어"));
 		}
 		else
@@ -188,4 +189,10 @@ void AAngryBirdGameState::ProcessVictory()
 
 	// 3. UI 띄우기
 	OnGameCleared.Broadcast();
+}
+
+void AAngryBirdGameState::ProcessFailure()
+{
+	OnGameOver.Broadcast();
+	UE_LOG(LogTemp, Warning, TEXT("졌어졌어졌어졌어졌어"));
 }

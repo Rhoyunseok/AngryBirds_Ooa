@@ -130,4 +130,5 @@ public:
 	FTimerHandle VictoryTimerHandle;
 	
 	void ProcessVictory();
+	void ProcessFailure();
 };
