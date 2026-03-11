@@ -22,4 +22,7 @@ protected:
 	
 public:
 	FOnPigDestroyedSignature OnPigDestroyed;
+	
+	UPROPERTY(EditAnywhere)
+	USoundBase* OinkSound;
 };

@@ -11,8 +11,8 @@
 void AStage1_1_LevelScriptActor::BeginPlay()
 {
 	Super::BeginPlay();
-	PigNum = 2;
-	StageInfo = "Tutorial Map";
+	PigNum = 4;
+	StageInfo = "Stage1_1";
 	// GameState 전송하기
 	
 	AAngryBirdGameState* GameState = Cast<AAngryBirdGameState>(UGameplayStatics::GetGameState(this));

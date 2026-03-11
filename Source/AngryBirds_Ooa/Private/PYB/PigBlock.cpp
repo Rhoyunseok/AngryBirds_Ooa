@@ -11,12 +11,33 @@ APigBlock::APigBlock()
 	BirdThreshold = 10.0f;
 	BlockHP = 1.0f;
 	BlockPrice = 1000.0f;
+	
+	ConstructorHelpers::FObjectFinder<USoundBase> tempOinkSound(TEXT("/Script/Engine.SoundWave'/Game/PYB/Sounds/AnyConv_com__piglette_oink_a8.AnyConv_com__piglette_oink_a8'"));
+	if (tempOinkSound.Succeeded())
+	{
+		OinkSound = tempOinkSound.Object;
+	}
+	ConstructorHelpers::FObjectFinder<USoundBase> tempBreakSound(TEXT("/Script/Engine.SoundWave'/Game/PYB/Sounds/AnyConv_com__piglette_damage_a4.AnyConv_com__piglette_damage_a4'"));
+	if (tempBreakSound.Succeeded())
+	{
+		BreakSound = tempBreakSound.Object;
+	}
 }
 
 void APigBlock::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	UGameplayStatics::PlaySoundAtLocation(
+		GetWorld(),
+		OinkSound,
+		GetActorLocation(),
+		1.0f,
+		1.0f,
+		0.0f,
+		nullptr,
+		nullptr
+	);
 }
 
 void APigBlock::BeforeBlockDestory()

@@ -11,6 +11,12 @@ ANewTNTBlock::ANewTNTBlock()
 	BlockThreshold = 200.0f;
 	BlockPrice = 300.0f;
 	ExplosionRadius = 500.0f * (GetActorScale3D().Size() * 3);
+	
+	ConstructorHelpers::FObjectFinder<USoundBase> tempBreakSound(TEXT("/Script/Engine.SoundWave'/Game/SHJ/Sound/Explosion.Explosion'"));
+	if (tempBreakSound.Succeeded())
+	{
+		BreakSound = tempBreakSound.Object;
+	}
 }
 
 void ANewTNTBlock::BeginPlay()
