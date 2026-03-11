@@ -140,19 +140,36 @@ void AAngryBirdGameState::CheckMatchState()
 // 4초 뒤에 타이머에 의해 자동으로 실행되는 함수
 void AAngryBirdGameState::ProcessVictory()
 {
-	// 1. 별 개수 동적 계산 (예: 남은 새 마릿수를 기준으로)
-	int32 EarnedStars = 1; // 기본 별 1개 (클리어 보장)
+	int32 EarnedStars = 1;
+	// 튜토리얼 점수 산정
+	if (CurrentStageInfo == TEXT("Tutorial Map"))
+	{
+		// 1. 별 개수 동적 계산 (예: 남은 새 마릿수를 기준으로)
+		 // 기본 별 1개 (클리어 보장)
 
-	if (RemainingBirds >= 2)
+		if (CurrentScore >= 5000)
+		{
+			EarnedStars = 3; // 5천점 이상이면 ★★★
+		}
+		else if (CurrentScore >= 3000)
+		{
+			EarnedStars = 2; // 3천점 이상이면 ★★☆
+		}
+		
+	} 
+	else if (CurrentStageInfo == TEXT("Stage1_1"))
 	{
-		EarnedStars = 3; // 새를 2마리 이상 남기고 깼다면 ★★★
-	}
-	else if (RemainingBirds == 1)
-	{
-		EarnedStars = 2; // 새를 1마리 남겼다면 ★★☆
+		
+		if (CurrentScore >= 8500)
+		{
+			EarnedStars = 3; // 3천점 이상이면 ★★★
+		}
+		else if (CurrentScore >= 6000)
+		{
+			EarnedStars = 2; // 2천점 이상이면 ★★☆
+		}
 	}
 	UpdateStars(EarnedStars);
-
 	// 2. 게임 인스턴스 가져와서 저장
 	UMyGameInstance* MyGI = Cast<UMyGameInstance>(GetGameInstance());
 	if (MyGI)
@@ -168,7 +185,7 @@ void AAngryBirdGameState::ProcessVictory()
 		UE_LOG(LogTemp, Warning, TEXT("저장 시도 이름: [%s] GameState"), *CurrentStageInfo);
 		MyGI->SaveStageClearData(CurrentStageInfo, EarnedStars);
 	}
-    
+
 	// 3. UI 띄우기
 	OnGameCleared.Broadcast();
 }

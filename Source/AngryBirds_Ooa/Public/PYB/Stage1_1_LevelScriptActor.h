@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PYB/YB_LevelScriptActor.h"
+#include "Engine/LevelScriptActor.h"
 #include "Stage1_1_LevelScriptActor.generated.h"
 
 /**
@@ -30,5 +30,15 @@ public:
 	
 	UFUNCTION()
 	void ShowLevelInfo();
+	UFUNCTION()
+	void OnGameSuccess();
+	UFUNCTION()
+	void OnGameFail();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI Settings")
+	TSubclassOf<class UUserWidget> SuccessWidgetClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI Settings")
+	TSubclassOf<class UUserWidget> FailWidgetClass;
 };
 

@@ -424,7 +424,7 @@ void ASlingShot::DrawTrajectory()
     PredictParams.bTraceWithChannel = true;
     PredictParams.TraceChannel = ECC_WorldStatic;  // 지형지물 채널
     PredictParams.MaxSimTime = 4.0f;               // 몇 초 뒤의 미래까지 그릴지 (길이 조절)
-    PredictParams.SimFrequency = 45.0f;            // 점의 간격 (숫자가 클수록 촘촘해짐)
+    PredictParams.SimFrequency = 135.0f;            // 점의 간격 (숫자가 클수록 촘촘해짐)
     PredictParams.OverrideGravityZ = -980.0f;      // 중력 덮어쓰기
     
     TrajectoryISMC->SetCollisionEnabled(ECollisionEnabled::NoCollision); 
