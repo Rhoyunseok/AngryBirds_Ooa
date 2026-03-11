@@ -4,11 +4,18 @@
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
 #include "RHO/AngryBirdGameState.h"
+#include "Sound/SoundBase.h"
 
 void USuccessStage::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	// 위젯이 생성되자마자 성공 사운드 재생
+	if (SuccessSound)
+	{
+		UGameplayStatics::PlaySound2D(this, SuccessSound);
+	}
+	
 	// 버튼 이벤트 바인딩
 	if (Btn_NextStage) Btn_NextStage->OnClicked.AddDynamic(this, &USuccessStage::OnNextStageClicked);
 	if (Btn_Restart) Btn_Restart->OnClicked.AddDynamic(this, &USuccessStage::OnRestartClicked);

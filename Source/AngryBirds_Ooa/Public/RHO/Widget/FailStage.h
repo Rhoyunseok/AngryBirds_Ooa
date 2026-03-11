@@ -5,6 +5,7 @@
 #include "FailStage.generated.h"
 
 class UButton;
+class USoundBase;
 
 UCLASS()
 class ANGRYBIRDS_OOA_API UFailStage : public UUserWidget
@@ -13,6 +14,10 @@ class ANGRYBIRDS_OOA_API UFailStage : public UUserWidget
 
 protected:
 	virtual void NativeConstruct() override;
+	
+	// --- 사운드 설정 ---
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* FailSound;
     
 	UPROPERTY(meta = (BindWidget))
 	UButton* Btn_Retry;

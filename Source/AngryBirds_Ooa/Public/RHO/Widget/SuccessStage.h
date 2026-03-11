@@ -7,6 +7,7 @@
 class UButton;
 class UTextBlock;
 class UStarWidget;
+class USoundBase;
 
 UCLASS()
 class ANGRYBIRDS_OOA_API USuccessStage : public UUserWidget
@@ -15,6 +16,10 @@ class ANGRYBIRDS_OOA_API USuccessStage : public UUserWidget
 
 protected:
 	virtual void NativeConstruct() override;
+	
+	// --- 사운드 설정 ---
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+    USoundBase* SuccessSound;
 
 	// --- 위젯 바인딩 (이미지 UI 요소와 매칭) ---
 	UPROPERTY(meta = (BindWidget))
