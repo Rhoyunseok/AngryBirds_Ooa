@@ -1,11 +1,18 @@
 #include "RHO/Widget/FailStage.h"
 #include "Components/Button.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 
 void UFailStage::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	// 위젯이 생성될 때 실패 사운드 재생
+	if (FailSound)
+	{
+		UGameplayStatics::PlaySound2D(this, FailSound);
+	}
+	
 	if (Btn_Retry)
 	{
 		Btn_Retry->OnClicked.AddDynamic(this, &UFailStage::OnRetryClicked);
