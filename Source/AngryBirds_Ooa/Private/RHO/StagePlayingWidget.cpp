@@ -28,7 +28,7 @@ void UStagePlayingWidget::NativeConstruct()
        // 초기 UI 업데이트 (게임 시작 시점의 정보로 UI를 초기화)
        // GameState에 GetCurrentStars() 등의 Getter 함수가 선언되어 있다고 가정합니다.
        UpdateAllUI(
-           GameState->GetCurrentScore(), 
+           GameState->GetCurrentScore(),
            GameState->GetRemainingPigs(), GameState->GetTotalPigs(), 
            GameState->GetRemainingBirds(), GameState->GetTotalBirds(), // 추가된 새 정보
            GameState->GetCurrentStars() // 별 정보 Getter
