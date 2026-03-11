@@ -31,6 +31,16 @@ ARockBlock::ARockBlock()
 	{
 		BreakSound = tempBreakSound.Object;
 	}
+	ConstructorHelpers::FObjectFinder<UParticleSystem> tempHitParticle(TEXT("/Script/Engine.ParticleSystem'/Game/Realistic_Starter_VFX_Pack_Vol2/Particles/Hit/P_Brick.P_Brick'"));
+	if (tempHitParticle.Succeeded())
+	{
+		HitParticle = tempHitParticle.Object;
+	}
+	ConstructorHelpers::FObjectFinder<UParticleSystem> tempBreakParticle(TEXT("/Script/Engine.ParticleSystem'/Game/Realistic_Starter_VFX_Pack_Vol2/Particles/Destruction/P_Destruction_Concrete.P_Destruction_Concrete'"));
+	if (tempBreakParticle.Succeeded())
+	{
+		BreakParticle = tempBreakParticle.Object;
+	}
 }
 
 void ARockBlock::CalBirdDamage()

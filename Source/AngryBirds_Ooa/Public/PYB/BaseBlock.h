@@ -73,6 +73,10 @@ public:
 	USoundBase* HitSound;
 	UPROPERTY(EditAnywhere)
 	USoundBase* BreakSound;
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* HitParticle;
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* BreakParticle;
 	
 	FOnScoreChangedSignature OnScoreChanged;
 };

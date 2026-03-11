@@ -22,7 +22,7 @@ void AStage1_1_LevelScriptActor::BeginPlay()
 		GameState->SetTotalPigs(PigNum);
         
 		// 여기서 사용할 수 있는 새의 수도 전달하고 싶다면 똑같이 호출하면 됩니다.
-		GameState->SetTotalBirds(3); 
+		GameState->SetTotalBirds(5); 
 		
 		// Stage Info 
 		GameState->SetStageInfo(StageInfo);

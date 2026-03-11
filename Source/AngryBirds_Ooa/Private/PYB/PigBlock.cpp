@@ -22,6 +22,11 @@ APigBlock::APigBlock()
 	{
 		BreakSound = tempBreakSound.Object;
 	}
+	ConstructorHelpers::FObjectFinder<UParticleSystem> tempBreakParticle(TEXT("/Script/Engine.ParticleSystem'/Game/Realistic_Starter_VFX_Pack_Vol2/Particles/Smoke/P_Smoke_F.P_Smoke_F'"));
+	if (tempBreakParticle.Succeeded())
+	{
+		BreakParticle = tempBreakParticle.Object;
+	}
 }
 
 void APigBlock::BeginPlay()

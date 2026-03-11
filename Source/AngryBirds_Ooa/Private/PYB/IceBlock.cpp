@@ -31,6 +31,16 @@ AIceBlock::AIceBlock()
 	{
 		BreakSound = tempBreakSound.Object;
 	}
+	ConstructorHelpers::FObjectFinder<UParticleSystem> tempHitParticle(TEXT("/Script/Engine.ParticleSystem'/Game/Realistic_Starter_VFX_Pack_Vol2/Particles/Hit/P_Paper.P_Paper'"));
+	if (tempHitParticle.Succeeded())
+	{
+		HitParticle = tempHitParticle.Object;
+	}
+	ConstructorHelpers::FObjectFinder<UParticleSystem> tempBreakParticle(TEXT("/Script/Engine.ParticleSystem'/Game/Realistic_Starter_VFX_Pack_Vol2/Particles/Destruction/P_Destruction_Metal.P_Destruction_Metal'"));
+	if (tempBreakParticle.Succeeded())
+	{
+		BreakParticle = tempBreakParticle.Object;
+	}
 }
 
 void AIceBlock::CalBirdDamage()

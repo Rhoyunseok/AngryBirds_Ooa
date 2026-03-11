@@ -17,6 +17,11 @@ ANewTNTBlock::ANewTNTBlock()
 	{
 		BreakSound = tempBreakSound.Object;
 	}
+	ConstructorHelpers::FObjectFinder<UParticleSystem> tempBreakParticle(TEXT("/Script/Engine.ParticleSystem'/Game/Realistic_Starter_VFX_Pack_Vol2/Particles/Explosion/P_Explosion_Big_B.P_Explosion_Big_B'"));
+	if (tempBreakParticle.Succeeded())
+	{
+		BreakParticle = tempBreakParticle.Object;
+	}
 }
 
 void ANewTNTBlock::BeginPlay()
@@ -37,7 +42,7 @@ void ANewTNTBlock::Explode()
 	TArray<AActor*> IgnoreActors;
 	IgnoreActors.Add(this);
 	
-	DrawDebugSphere(GetWorld(), ExplodeLocation, ExplosionRadius, 32, FColor::Red, false, 0.5f, 0, 2.0f);
+	// DrawDebugSphere(GetWorld(), ExplodeLocation, ExplosionRadius, 32, FColor::Red, false, 0.5f, 0, 2.0f);
 
 	// 2. 360도 범위 물리 충격
 	TArray<FHitResult> OutHits;

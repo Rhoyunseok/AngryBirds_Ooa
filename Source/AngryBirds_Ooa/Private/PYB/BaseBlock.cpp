@@ -36,6 +36,16 @@ ABaseBlock::ABaseBlock()
 	{
 		BreakSound = tempBreakSound.Object;
 	}
+	ConstructorHelpers::FObjectFinder<UParticleSystem> tempHitParticle(TEXT("/Script/Engine.ParticleSystem'/Game/Realistic_Starter_VFX_Pack_Vol2/Particles/Hit/P_Wood.P_Wood'"));
+	if (tempHitParticle.Succeeded())
+	{
+		HitParticle = tempHitParticle.Object;
+	}
+	ConstructorHelpers::FObjectFinder<UParticleSystem> tempBreakParticle(TEXT("/Script/Engine.ParticleSystem'/Game/Realistic_Starter_VFX_Pack_Vol2/Particles/Hit/P_Concrete.P_Concrete'"));
+	if (tempBreakParticle.Succeeded())
+	{
+		BreakParticle = tempBreakParticle.Object;
+	}
 }
 
 // Called when the game starts or when spawned
@@ -108,6 +118,10 @@ float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& Dama
 					nullptr
 					);
 			}
+			if (HitParticle && GetWorld())
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitParticle, GetActorLocation());
+			}
 		}
 	}
 	else if (DamageState != 2)
@@ -117,14 +131,18 @@ float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& Dama
 		{
 			UGameplayStatics::PlaySoundAtLocation(
 				GetWorld(),
-				HitSound,
+				BreakSound,
 				GetActorLocation(),
-				1.0f,
+				0.8f,
 				1.0f,
 				0.0f,
 				nullptr,
 				nullptr
 				);
+		}
+		if (BreakParticle && GetWorld())
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BreakParticle, GetActorLocation());
 		}
 		BeforeBlockDestory();
 		FTimerHandle TimerHandle;
@@ -192,6 +210,7 @@ void ABaseBlock::CalBirdDamage()
 
 void ABaseBlock::BeforeBlockDestory()
 {
+	
 	// 2. 캐스팅에 성공했다면?
 	if (GameState)
 	{
