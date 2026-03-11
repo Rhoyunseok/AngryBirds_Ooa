@@ -120,7 +120,14 @@ float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& Dama
 			}
 			if (HitParticle && GetWorld())
 			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitParticle, GetActorLocation());
+				UGameplayStatics::SpawnEmitterAtLocation(
+					GetWorld(), 
+					HitParticle, 
+					GetActorLocation(),
+					FRotator::ZeroRotator,
+					FVector(10.0f),
+					true
+					);
 			}
 		}
 	}
@@ -142,7 +149,14 @@ float ABaseBlock::TakeDamage(float DamageAmount, struct FDamageEvent const& Dama
 		}
 		if (BreakParticle && GetWorld())
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BreakParticle, GetActorLocation());
+			UGameplayStatics::SpawnEmitterAtLocation(
+					GetWorld(), 
+					BreakParticle, 
+					GetActorLocation(),
+					FRotator::ZeroRotator,
+					FVector(10.0f),
+					true
+					);
 		}
 		BeforeBlockDestory();
 		FTimerHandle TimerHandle;
