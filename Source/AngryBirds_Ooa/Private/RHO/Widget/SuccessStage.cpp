@@ -1,5 +1,5 @@
 #include "RHO/Widget/SuccessStage.h"
-#include "RHO/Widget/StarWidget.h" // StarWidget 헤더 포함 필수
+#include "RHO/Widget/StarWidget.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
@@ -14,8 +14,8 @@ void USuccessStage::NativeConstruct()
 	if (Btn_Restart) Btn_Restart->OnClicked.AddDynamic(this, &USuccessStage::OnRestartClicked);
 	if (Btn_StageSelect) Btn_StageSelect->OnClicked.AddDynamic(this, &USuccessStage::OnStageSelectClicked);
 
-	// 점수 및 별점 표시 로직
-	AAngryBirdGameState* GameState = Cast<AAngryBirdGameState>(UGameplayStatics::GetGameState(this)); // 게임 상태에서 점수와 별 개수를 가져옵니다.
+	// 현재 스테이지의 점수 및 별점 가져오기
+	AAngryBirdGameState* GameState = Cast<AAngryBirdGameState>(UGameplayStatics::GetGameState(this));
 	if (GameState)
 	{
 		int32 MyScore = GameState->GetCurrentScore();
@@ -23,24 +23,35 @@ void USuccessStage::NativeConstruct()
 
 		// 텍스트 업데이트
 		if (Txt_Score)
-			Txt_Score->SetText(FText::Format(NSLOCTEXT("UI", "ScoreText", "SCORE : {0}"), FText::AsNumber(MyScore)));
+			Txt_Score->SetText(FText::Format(NSLOCTEXT("UI", "ScoreText", "{0}"), FText::AsNumber(MyScore)));
+       
 		if (Txt_Stars)
-			Txt_Stars->SetText(FText::Format(NSLOCTEXT("UI", "StarsText", "STARS : {0}"), FText::AsNumber(MyStars)));
-		 if (WBP_StarWidget)
-		 {
-		 	// 몇초 뒤에 별이 채워지는 애니메이션이 실행되도록 타이머 설정
-		 	FTimerHandle StarAnimTimerHandle;
-		 	GetWorld()->GetTimerManager().SetTimer(StarAnimTimerHandle, [this, MyStars]()
-		 	{
-		 		WBP_StarWidget->UpdateStars(MyStars, true);
-		 	}, 1.0f, false); // 1초 뒤에 실행, 반복 안함
-		 }
+			Txt_Stars->SetText(FText::Format(NSLOCTEXT("UI", "StarsText", "{0}"), FText::AsNumber(MyStars)));
+
+		if (WBP_StarWidget)
+		{
+			// 0.5초 뒤에 별 애니메이션 실행 (이미지 연출용)
+			FTimerHandle StarAnimTimerHandle;
+			GetWorld()->GetTimerManager().SetTimer(StarAnimTimerHandle, [this, MyStars]()
+			{
+			   if(WBP_StarWidget) WBP_StarWidget->UpdateStars(MyStars, true);
+			}, 0.5f, false);
+		}
 	}
 }
 
 void USuccessStage::OnNextStageClicked()
 {
-	UGameplayStatics::OpenLevel(this, FName("Stage1_1"));
+	if (NextLevelName.IsNone())
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("NextLevelName이 설정되지 않았습니다!"));
+		return;
+	}
+
+	FString MapName = NextLevelName.ToString();
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, FString::Printf(TEXT("이동 시도 중인 맵: %s"), *MapName));
+
+	UGameplayStatics::OpenLevel(this, NextLevelName);
 }
 
 void USuccessStage::OnRestartClicked()

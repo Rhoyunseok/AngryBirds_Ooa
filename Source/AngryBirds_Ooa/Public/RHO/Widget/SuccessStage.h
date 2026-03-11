@@ -6,6 +6,7 @@
 
 class UButton;
 class UTextBlock;
+class UStarWidget;
 
 UCLASS()
 class ANGRYBIRDS_OOA_API USuccessStage : public UUserWidget
@@ -15,12 +16,12 @@ class ANGRYBIRDS_OOA_API USuccessStage : public UUserWidget
 protected:
 	virtual void NativeConstruct() override;
 
-	// --- 위젯 바인딩 ---
+	// --- 위젯 바인딩 (이미지 UI 요소와 매칭) ---
 	UPROPERTY(meta = (BindWidget))
 	UButton* Btn_NextStage;
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* Btn_Restart; // 추가됨
+	UButton* Btn_Restart;
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* Btn_StageSelect;
@@ -30,21 +31,20 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Txt_Stars;
-	
+    
 	UPROPERTY(meta = (BindWidget))
-	class UStarWidget* WBP_StarWidget;
-	
-	// --- 설정 변수 ---
-	// 요청하신 대로 Stage1_1로 기본값 변경
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level")
-	FName NextLevelName = TEXT("Stage1_1");
+	UStarWidget* WBP_StarWidget;
+    
+	// --- 설정 변수 (중요: 에디터에서 스테이지별로 다르게 설정 가능) ---
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Settings")
+	FName NextLevelName;
 
 	// --- 버튼 클릭 핸들러 ---
 	UFUNCTION()
 	void OnNextStageClicked();
 
 	UFUNCTION()
-	void OnRestartClicked(); // 추가됨
+	void OnRestartClicked();
 
 	UFUNCTION()
 	void OnStageSelectClicked();
